@@ -223,7 +223,7 @@ The most notable feature of Word documents in R Markdown is the ability to creat
 
 ## Themes (Optional)
 
-In general, there are a [variety of theme options available](https://www.datadreaming.org/post/r-markdown-theme-gallery/) to use with R Markdown HTML documents.
+In general, there are a [variety of theme options available](https://www.datadreaming.org/posts/2018-04-11-r-markdown-theme-gallery/2018-04-11-r-markdown-theme-gallery) to use with R Markdown HTML documents.
 
 The following packages are not installed already on Noteable. So in order to use `prettydoc` or `rmdformats`, you will need to first install the packages and then call them via the `library()` function. 
 
