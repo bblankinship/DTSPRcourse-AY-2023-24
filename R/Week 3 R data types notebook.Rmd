@@ -1,0 +1,1428 @@
+---
+title: "R data types notebook"
+author: "Dr Brittany Blankinship"
+date: "`r Sys.Date()`"
+toc: true
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## 1. Introduction 
+
+In this notebook we will be looking at the data types discussed in the Week 2 & 3 content, how they work in R, and how you can manipulate them. A data type of an object or variable specifies the type of data that is stored inside that object and how you can then interact with it.
+
+*Reminder* that you can open the RMarkdown document outline at the top of this panel to navigate to different sections in this notebook. You can also collapse sections my clicking on the little arrow that appears by the line number. Note though that if you collapse a level 2 section, all level 3 sections contained within it will also collapse. Try this for line 13 Introduction to see what I mean
+
+*Note* there is code throughout this workbooks which will intentionally produce an error. Try to read the error messages and see if you can understand what is causing the problem and why. Reading error messages and not being frightened by them is a key skills for any programmer! These errors mean that you will not be able to knit the document unless you comment them out. 
+
+Remember to RUN ALL CODE CHUNKS IN ORDER AS YOU GO THROUGH THIS NOTEBOOK (if you skip some, you might see some unexpected errors)
+
+### 1.1 R has 5 basic types.
+
+* logical: TRUE, FALSE  
+* numeric: 1.0, 15.3
+  - double: 1.0, 15.3
+  - integer: -1,2  
+* complex: 1+4i  
+* character: "health care", "social care"
+
+Another important data type that helps to interact with categorical variables is 
+
+* factor: "apple", "banana", "orange"
+
+To work with date and time data we use the `lubridate` package 
+
+* date: "2023-06-01"
+* time: "15:30:43"
+* datetime: "2023-06-01 15:30:43 UTC"
+
+### 1.2 R also provides many functions to examine data type features, for example  
+
+* `mode()` - how is the object stored in R? 
+* `class()` - what kind of object is it (high-level)?  
+* `typeof()` - what is the object’s data type (low-level)?  
+* `length()` - how long is the data?  
+
+If you would like to check if an object is a particular data type, there is a series of `"is.datatype()"` functions which produce a Boolean value output:
+
+* `is.logical()` to check if the data object holds a logical value (i.e., TRUE or FALSE)
+* `is.numeric()` to check if the data object is numeric
+* `is.double()` to check if the data object is a double-precision floating point number 
+* `is.integer()` to check if the data object is an integer
+* `is.complex()` to check if the data object is complex
+* `is.character()` to check if the data object is character
+* `is.factor()` to check if the data object is a nominal factor
+* `is.ordered()` to check if the data object is an ordinal factor 
+
+For datetime data `lubridate` also has a series of `"is.X()"` functions which mirror the constructors in base R above:
+
+* `is.Date()` to check if the data is a Date type
+* `is.timespan()` to check if the data object is a length of time 
+
+To coerce or change an object to another data type, there is a series of `as.datatype()` functions 
+
+* `as.logical()` 
+* `as.numeric()`
+* `as.double()`
+* `as.integer()`
+* `as.complex()`
+* `as.character()`
+
+* `fct()` to encode a vector as a factor. There are `is._()` and `as._()` functions for membership and coercion 
+  - `as_factor()`: note the syntax difference from the other functions. This is because we will be using the factor coercion function from the `forcats` package rather than base R. See the Factor section for more details 
+  - `as.ordered()`: defaults to lexical ordering (alphabetical order) for coerced characters
+
+* `as_datetime()` 
+* `as_date()`
+
+When working with data frames (which we will learn more about in Week 4), there are 2 similar functions that are useful:  
+
+* `str()` to get the structure of an R object 
+* `dplyr::glimpse()` to see a more detailed glimpse of the structure of a datafame, including a preview of the data 
+
+*Note* reminder of the namespace syntax which uses double colon `::` means `package::function()`. So the above on line 83 means the `glimpse()` function from the `dplyr` package 
+
+Let's discuss each of these R data types one by one. 
+
+```{r libraries, message = FALSE, echo = FALSE}
+# first lets load the libraries we need for this notebook 
+
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+## 2. Logical 
+
+In R, Boolean data types are called `logical` taking the values `TRUE` and `FALSE`. You can also use `T` or `F`, but it is good practice to spell out the logical value in its entirety as `T` and `F` can be redefined and lead to all kinds of chaos. Logical values result from any logical statements that are made. 
+
+```{r logical-1}
+typeof(TRUE)
+
+typeof(FALSE)
+```
+
+It is possible to assign a Boolean value to a variable, but it is not possible to assign a value to a Boolean value (as `TRUE` and `FALSE` are reserved words).
+
+```{r logical-2}
+a_true_variable <- TRUE
+
+a_true_variable
+```
+
+
+```{r logical-3}
+TRUE <- 90 # this will produce an error 
+
+T <- 90 # but this will not!! Hence why you should not use T or F as synonyms for TRUE and FALSE
+
+typeof(T) # now T is a double rather than logical data type 
+
+```
+
+In Python, the Boolean data type values are True and False. If you attempt this in R, you will get an error as they need to be in all capital letters. 
+
+```{r logical-4}
+f <- False # this will produce an error 
+```
+
+*Note* one of the many benefits of working in RStudio is the 4 pane layout. As you go through this notebook and run the code creating different objects, observe the "Global Environment" pane. Here you will see all of the different R objects with a summary of what they contain and how they are typed. To view one of these objects, you can use the code `View(object)`. When working with data structures you can double click on the data object in the Global Environment which will automatically run the `View()` function for you.
+
+### 2.1 Converting data to and from logical 
+
+In R, like in Python, when coercing numeric and complex vectors into logical, zeros are FALSE and non-zero values are TRUE. 
+
+```{r logical-coercion-1}
+zero_int <- 0
+
+zero_int <- as.logical(zero_int)
+
+zero_int
+```
+
+
+```{r logical-coercion-2}
+pos_int <- 5
+
+pos_int <- as.logical(pos_int)
+
+pos_int
+```
+
+```{r logical-coercion-3}
+neg_dbl <- -5.4
+
+neg_dbl <- as.logical(neg_dbl)
+
+neg_dbl
+```
+
+
+```{r logical-coercion-4}
+comp <- 8 + 4i
+
+comp <- as.logical(comp)
+
+comp
+```
+
+You can also convert logical values to a character string or numeric values. Since TRUE and FALSE are equivalent to 1 and 0, they can be converted to the respective numeric types with `as.numeric()`, `as.double()`, and `as.complex()` 
+
+```{r logical-coercion-5}
+ct <- as.character(TRUE)
+
+ct # we can tell ct is not a character because it is printed in ""
+
+typeof(ct)
+```
+
+```{r logical-coercion-6}
+nt <- as.numeric(TRUE)
+
+nt 
+
+class(nt)
+```
+
+```{r logical-coercion-7}
+compt <- as.complex(TRUE)
+
+compt
+
+class(compt)
+```
+
+
+### 2.2 Working with logical data types and values  
+
+Comparison operators: 
+
+```{r logical-comp-operators}
+# using the equal to comparison
+# this should evaluate to FALSE
+100 == 205 
+
+# using the not equal to comparison
+# this should evaluate to TRUE
+100 != 205 
+
+# using the greater than comparison
+# this should evaluate to FALSE
+100 > 205 
+
+# using the less than comparison
+# this should evaluate to TRUE
+100 < 205
+
+# using the greater than or equal to comparison
+# this should evaluate to FALSE
+100 >= 205 
+
+# using the less than or equal to comparison
+# this should evaluate to TRUE
+100 <= 205 
+```
+
+As an example, lets create a **vector** (the most basic data structure in R that we will learn about more next week, essentially a simple list) of numbers and ask R if the elements were greater than 5. Our output is going to be a logical vector where each element is either `TRUE` or `FALSE`
+
+```{r logical-vector-comp}
+# Create a vector using c() (concatenate or combine)
+x <- c(1, 5, 6, 7, 2, 8)
+
+# Are the elements of vector x greater than 5? Store results in vector y
+y <- x > 5
+
+# View y
+y
+
+# View class
+class(y)
+class(x)
+
+```
+
+You can also create a vector of logical statements, like the output of y above. And then convert these logical values to numeric and back given the TRUE == 1 and FALSE == 0 mapping.  
+
+```{r logical-vector}
+vlog <- c(TRUE, FALSE, TRUE, FALSE, FALSE, TRUE)
+
+vlog
+
+```
+
+
+```{r logical-vector-num}
+# Convert to numeric vector
+vlog_n <- as.numeric(vlog)
+
+# View vector
+vlog_n
+
+# Convert back to logical vector
+vlog_l <- as.logical(vlog_n)
+
+vlog_l
+```
+
+This also means that you can do math with logical values! This is useful if, for example, you’re trying to see how many TRUE values you have in your vector. In fact, applying any math operations to a logical vector will automatically convert the values to 1s and 0s.
+
+```{r logical-math}
+sum(vlog) # there are a total of 3 TRUE values or 1s 
+
+min(vlog) 
+
+max(vlog)
+
+mean(vlog) # this is not necessarily meaningful, but the point is that it does not throw an error because the logical vector is being treated as 1s and 0s (AKA as numbers)
+
+```
+
+
+## 3. Numeric 
+
+In R, numeric is both the high level data type category for numbers as well as its own data type. Notably, when you call `class()` of a numeric variable the output will be numeric, but lower level `typeof()` will be double. This is because the default behavior in R is to store numeric data as double. Complex number data types in R are a unique mode, class, and data type. As they are not commonly used, I have not included a separate section for them however (but at the top of the document on line 29 they are not subset within numeric for this reason). 
+
+There are some built-in functions when working with numeric data that we can use:
+
+* `round()` to round a number to the nearest integer. **Note** when the number ends in .5 `round()` has some unexpected behavior as it uses the IEC 60559 standard "go to the even digit". This means that the rounding will go to the nearest even digit. This behavior is what was referenced in the Data Dialogue with Dr Dimitrios Doudesis. You can also specify the number of decimal places with the `digits` argument in the `round()` function 
+* `abs()` to get the absolute value of a number 
+* `sum()` used to sum a list or vector of values
+* `min()` returns the minimum value  
+* `max()` returns the maximum value 
+
+```{r rounding-behavior}
+# Based on what is mentioned above in line 290, what do you expect the output to be for the following round functions? Think about this before running the code 
+
+round(4.5)
+
+round(5.5)
+
+round(0.5)
+```
+
+
+```{r numeric-double}
+dd <- 56.48
+
+class(dd)
+typeof(dd)
+mode(dd)
+```
+
+```{r numeric-numeric}
+ii <- 80
+
+class(ii)
+typeof(ii)
+mode(ii)
+```
+
+```{r numeric-complex}
+cc <- 7i + 3 # note here I put the imaginary element before the real element
+
+cc # when printed, R automatically reformats the number to (real + imaginary)
+
+typeof(cc)
+mode(cc)
+```
+
+You can also create numeric data with scientific notation in R but inputting `e` or `E` followed by a positive or negative integer. 
+
+```{r numeric-scientific-1}
+scnum1 <- 4.2e-3
+
+scnum1
+
+typeof(scnum1)
+```
+
+```{r numeric-scientific-2}
+scnum2 <- .4E5
+
+scnum2
+
+typeof(scnum2)
+```
+
+### 3.1 Converting to and from numeric 
+
+Notably, because integers and doubles are stored differently and have differing levels of precision, using the `as.integer()` function truncates floating-point numbers so that the result is the nearby integer closer to zero (rounding down in other words). 
+
+```{r numeric-coercion-1}
+# create a double 
+dbl1 <- 4.8573
+
+# check the data type 
+typeof(dbl1)
+
+# check the data class 
+class(dbl1)
+
+# check the storage mode - for numeric data this will always be numeric as the higher order class 
+mode(dbl1)
+```
+
+
+```{r numeric-coercion-2}
+#convert object dbl1 to an integer 
+dbl1_int <- as.integer(dbl1) #this will truncate the value of a double 
+
+dbl1_int
+
+typeof(dbl1_int)
+class(dbl1_int)
+mode(dbl1_int)
+
+is.numeric(dbl1_int)
+is.integer(dbl1_int)
+is.double(dbl1_int)
+```
+
+On a technical note, `is.numeric()` tests the mode, not the class while `as.numeric()` (which is identical to `as.double()`) coerces to the class. 
+
+By default, numeric data types are doubles, even if you input a full number, as seen in line 316 with object `ii`. There are, however, a few ways of automatically creating integer data types in R. If you would like to create an integer variable without specifying `as.integer()` you can put an `L` after the number. You can also create an integer using `:` which tells R to generate a sequence of numbers from the value on the left to the value on the right, going up by 1 each time. 
+
+```{r numeric-coercion-3}
+ii2 <- 45L
+ii2
+
+class(ii2)
+typeof(ii2)
+mode(ii2) # this is numeric as numeric is the mode of storage of number based data in R for numeric, double, and integer types 
+
+ii_vec <- c(44L, 687L, 2L, 60L)
+ii_vec
+
+class(ii_vec)
+typeof(ii_vec)
+mode(ii_vec)
+```
+
+```{r numeric-coercion-4}
+ii_vec2 <- c(1:15)
+ii_vec2
+
+class(ii_vec2)
+typeof(ii_vec2)
+mode(ii_vec2)
+```
+
+If you randomly sample a certain number of integer values within a specified range using `sample()`, this will be automatically typed as an integer as well. If you input a double (or number with a decimal place) as the first argument in `sample()` this will, as expected, produce a vector of type double. 
+
+```{r numeric-coercion-5}
+random_ii <- sample(1:15, size = 10) # create a vector of 10 random numbers between 1 and 15 
+random_ii
+
+class(random_ii)
+typeof(random_ii)
+mode(random_ii)
+```
+
+```{r numeric-coercion-6}
+random_nd <- sample(1.4:15.8, size = 10) # create a vector of 10 random numbers between 1 and 15 
+random_nd
+
+class(random_nd)
+typeof(random_nd)
+mode(random_nd)
+```
+
+When converting a character object to numeric with `as.numeric()`, anything that cannot be parsed will turn into NA. R will let us know that NAs were coerced into the object with a warning. 
+
+*Note* Warnings are not equivalent to Errors in R. When there is an Error, typically this means the operation was not completed or the code not run. A Warning means the code was executed, but it may not be behaving as expected so you should check the output/result. Typically warnings are just that, warnings. But you should never ignore them completely. 
+
+```{r numeric-coercion-7}
+vector1 <- c("F", "1", "2", "4")
+vector1
+
+c2num <- as.numeric(vector1)
+c2num
+```
+
+
+### 3.2 Built-in functions 
+
+```{r num-round}
+round(0.5) # rounds down as the nearest even digit is 0 
+
+round(-1.5) # rounds up to -2 as it is the nearest even digit 
+
+round(45.5) # rounds up 
+
+round(46.5) # rounds down 
+
+round(30.7)
+
+round(90.2)
+```
+
+```{r num-abs}
+abs(-47.6)
+
+abs(367)
+```
+
+```{r num-summary}
+num_obj <- c(1, 3, 4, 67.8, 90)
+
+sum(num_obj)
+
+min(num_obj)
+
+max(num_obj)
+```
+
+### 3.3 Arithmetic operators 
+
+There are 7 arithmetic operators in R. 
+
+```{r arithmetic-operators}
+# assign the values "7" and "3" to objects "xx" and "yy"
+xx <- 7
+yy <- 3 
+
+# arithmetic operators 
+
+## addition 
+xx + yy 
+
+## subtraction 
+xx - yy
+
+## division 
+xx / yy  
+
+## integer division/floor division
+xx %/% yy
+
+## exponent 
+xx ^ yy
+
+## modulus 
+xx %% yy
+
+```
+
+As a statistical programming language, there is of course *tons* more than can be done in R with numeric data. We will see more of this as we explore different data structures next week. 
+
+## 4. Character 
+
+String data in R is called character. When working with character strings, the `stringr` package is our best friend. This package is automatically loaded when we call `library(tidyverse)`. In R, character strings are denoted with either single `''` or double `""` quotation marks. To store a multi-line string, we need to use the `cat()` function. 
+
+Within the `stringr` package, there are 8 main verbs that work with patterns using regular expressions. Verbs 4 to 7 have a `str_verb_all()` version of the function, which does the verb action to all matches rather than just the first instance. All functions in `stringr` start with `str_` and take a vector of strings as the first argument. 
+
+1. `str_detect(x, pattern)`: tells you if there is a match to the pattern, logical output 
+2. `str_count(x, pattern)`: counts the number of patterns
+3. `str_subset(x, pattern)`: extracts the matching components
+4. `str_locate(x, pattern)`: gives the position of the match
+5. `str_extract(x, pattern)`: extracts the text of the match
+6. `str_match(x, pattern)`: extracts parts of the match defined by parentheses
+7. `str_replace(x, pattern)`: replaces the matches with new text
+8. `str_split(x, pattern)`: splits up a string into multiple pieces
+  - there are various versions of `str_split_x` which return different data structures as output 
+
+Some other useful functions to use with characters are:
+
+* `nchar()` or `str_length()` from `stringr` to get the length of a character, or of each character within a vector 
+* `str_c()` combines multiple character vectors into a single character vector. You can specify the `sep` argument with a string input which is then inserted between each character 
+* `str_glue()` for interpolating character strings 
+
+
+```{r character-1}
+string1 <- "Edinburgh is the capital of Scotland"
+
+string1
+
+typeof(string1)
+class(string1)
+mode(string1)
+```
+
+```{r character-multi}
+# a multiline string variables
+string2 <- 'Edinburgh is
+the capital
+of Scotland'
+
+## note if you do not run the whole code chunk, you need to highlight all of the string2 object to run it. This means lines 546 to 548. Play around with this to see what I mean - e.g., put your cursor on line 547 and run the code to see what happens 
+
+# without using the cat() function - notice R input \n at the end of each line break. \ is an escape character and n means new line 
+string2
+
+cat(string2)
+
+```
+
+If you want to include a quote character as part of the string itself, you may be tempted to try something as follows:
+
+```{r character-quote}
+#'This character contains a single quote (') character.'
+
+# un-comment the code above on line 562 and run it 
+
+## I have commented it out because it produces an error, which then makes RStudio include a red circle with an x in it at this and subsequent line numbers to highlight to us that there is an issue with out code. You can hover your cursor above the x to see what the error is without running the code even! Un-comment the code and see what I mean 
+```
+
+But, as you can see this produces an error. We can do 2 things instead:
+
+1. delimit the character with the other type of quote 
+2. use an escape sequence (using the `\` to "escape" from the character)
+
+```{r character-quote-1}
+# option 1
+
+"This string contains a single quote (') character."
+
+'This string contains a double quote (") character.'
+
+```
+
+```{r character-quote-2}
+# option 2 
+
+'This string contains a single quote (\') character.'
+
+```
+
+To see the full list of escape sequence special characters run the following code
+
+```{r character-escp-list}
+?"'"
+
+# or you can do the opposite
+?'"'
+```
+
+
+To include a literal backslash in a string using escape characters, you need to use 2 `\\`
+
+```{r character-escape}
+"This string contains a backlash \\ character"
+```
+When you run the string above, the output shows both backslashes. What is happening here? The printed representation of a string is not the same as the string itself, because the printed representation shows the escapes. To see the raw contents of the string, use `writeLines()`:
+
+```{r character-raw-string}
+
+writeLines("This string contains a backlash \\ character")
+```
+
+
+### 4.1 Converting to and from character data 
+
+When working with different data structures, if one value is a character, the entire object will be parsed as a character string data type. In particular with messy data and variables you expect to be numeric, this can lead to a lot of headaches as you cannot do math with a vector of numbers classed as characters. 
+
+```{r character-num-vec}
+# lets create a vector of all numbers but 1 is a character string
+ex_cvec <- c(3, 56.7, 2, 90, "3")
+
+ex_cvec
+class(ex_cvec)
+
+sum(ex_cvec) # produces an error - try and read the error to understand what went wrong 
+
+# we can easily fix this with the as.double function to change the data type 
+ex_cvec_num <- as.double(ex_cvec)
+
+sum(ex_cvec_num) # no error, happy days with the expected data type 
+```
+
+As described above in the Numeric section, when converting a character object to numeric with `as.numeric()`, anything that cannot be parsed will turn into NA. This means anything other than numbers in quotation marks. 
+
+We could now easily convert the `ex_cvec_num` object back to a character. *Any data type* in R can be successfully converted to a character. 
+
+```{r num-character-vec}
+ex_cvec_c <- as.character(ex_cvec_num)
+
+ex_cvec_c
+class(ex_cvec_c)
+```
+
+
+### 4.2 Working with character data & regular expressions 
+
+```{r string-length}
+# let's remind ourselves what string1 consisted of 
+string1
+
+nchar(string1)
+
+## or stringr version 
+
+str_length(string1)
+```
+
+You can use the `str_detect()` function detect the presence or absences of a pattern in a string. The regular expression "[aeiou]" matches any single character that is a vowel. 
+
+```{r strdetect}
+str_detect(string1, pattern = "[aeiou]") 
+
+# if you input a character vector, str_detect will output a logical vector 
+
+c_vec <- c("The", "summer", "is", "a", "great", "time", "to", "go", "to", "the", "beach")
+
+str_detect(c_vec, pattern = "mm")
+```
+You can use `str_count()` to count the number of matches in a string. 
+
+```{r strcount}
+str_count(string1, pattern = "[aeiou]") # there are 10 vowels in our string 
+
+str_count(c_vec, pattern = "[aeiou]")
+
+```
+
+You can use `str_view()` to view the HTML rending of a regular expression match. This shows the first match. The view all matches, you can use `str_view_all()`
+
+```{r strview}
+str_view(string1,  pattern = "[aeiou]")
+
+str_view_all(string1,  pattern = "[aeiou]")
+```
+
+By default, regular expressions will match any part of a string. It’s often useful to **anchor** the regular expression so that it matches from the start or end of the string. You can use:
+
+* `^` to match the start of the string
+* `$` to match the end of the string
+
+To remember which is which, try this mnemonic: 'if you begin with power (^), you end up with money ($).'
+
+```{r regex-anchor}
+str_view(c_vec, pattern = "^t")
+
+str_view(c_vec, pattern = "h$")
+```
+
+You can use `str_subset()` to subset or extract matching elements. If you use the argument `negate = TRUE`, this will return non-matching elments. 
+
+```{r stesubset}
+str_subset(c_vec, pattern = "o")
+
+str_subset(c_vec, pattern = "o", negate = TRUE)
+```
+You can use `str_locate()` to locate the position of patterns in a string. In the output, the first column, start, gives the position at the start of the match, and the second column, end, gives the position of the end.
+
+```{r}
+str_locate(c_vec, pattern = "t") 
+
+```
+Following on from this, if you wanted to extract the matching patterns from a string rather than just locate them, you can use `str_extrct()`
+
+```{r strextract-1}
+str_extract(c_vec, pattern = "[aeiou]")
+```
+
+It may not be clear with `c_vec` but using `str_extract` with `string1` produces a somewhat expected result - what do you think is happening?
+
+```{r strexttract-2}
+str_extract(string1, pattern = "[aeiou]")
+```
+
+The output is only the first extracted match! To get all matches we can use `str_extract_all()`
+
+```{r strextractall}
+str_extract_all(string1, pattern = "[aeiou]")
+```
+You can use `str_match()` to extract matched groups from a string. This function extracts parts of the match defined by parentheses 
+
+```{r strmatch-1}
+str_match(string1, pattern = "(.)[aeiou](.)") # regular expression to extract characters on either side of the vowel 
+```
+When you want to change or replace aspects of a string, you can use `str_replace()`. 
+
+```{r strreplace}
+str_replace(c_vec, pattern = "[aeiou]", replacement = "?")
+
+# notice only the 1st vowel is replaced. To replace all of the matched patterns we can use str_replace_all
+
+str_replace_all(c_vec, pattern = "[aeiou]", replacement = "?")
+```
+To split up your string into multiple pieces, you can use `str_split()`
+
+```{r strsplit}
+str_split(string1, pattern = "[aeiou]|[AEIOU]") # here I have used the or operator | in the regular expression to include both lower case | (or) upper case vowels 
+```
+
+To join multiple strings together the `stringr` package has `str_c()`:
+
+```{r}
+# lets join the c_vec into a sigle string rather than a vector of strings 
+c_vec
+
+str_c(c_vec, collapse = "- ")
+```
+
+In Python there are f-strings for interpolation, which `stringr` executes via `str_glue()`. When working with data frames, `str_glue_data()` can be particularly useful in data pipelines or when creating summaries of your data. 
+
+```{r strglue}
+activity <- "Data Science"
+
+str_glue("{activity} is fun")
+```
+
+
+## 5. Factor 
+
+When working with factors, the `forcats` package will quickly become your favorite. As with `stringr`, `forcats` was automatically loaded when we called the `tidyverse` at the top of this document. Functions from `forcats` typically start with `fct_`. Notably, unlike in Python, in R both factor values and levels can include missing data. 
+
+Internally, factors in R are integer values mapped to character strings. That is to say that factors are stored as a vector of integer values with a corresponding set of character values to use when the factor is displayed. The categories of a categorical variable are called **levels** in R. Both numeric and character variables can be made into factors, but a factor's levels will always be character values. Unlike working with categorical data in Python's pandas, you can specify labels at the time of creating a factor object. 
+
+Some useful functions for working with factors include:
+
+* `levels()` to see the levels directory for a factor
+* `summary()` to see the levels of a factor as well as the number of observations per level 
+* `fct_inorder()` to re-order factor levels by the order in which they first appear in the data 
+* `fct_infreq()` to re-order factor levels by the frequency of values within each level (largest first by default)
+* `fct_relevel()` to manually reorder factor levels
+* `fct_recode()` to manually change the factor levels 
+* `fct_expand()` to add additional levels to a factor 
+* `fct_drop()` to drop unused levels 
+* `fct_collapse()` to collapse levels into manually defined groups
+* `fct_lump_()` to collapse the least/most frequent values of a factor into "other"
+  - `fct_lump_min()` lumps level that appear fewer than the specified `min` times
+  - `fct_lump_lowfreq()` lumps together the least frequent levels, ensuring that "other" is still the smallest level
+* `fct_explicit_na()` to add NA as a factor level 
+  - in `forcats` version 1.0.0 this function has been depricated in favor of `fct_na_value_to_level()`
+
+
+### 5.1 Converting to and from factor data 
+
+There are 2 very similar functions to convert or coerce data to be a nominal factor: `as.factor()` from base R and `as_factor()` from `forcats` in the tidyverse. The primary difference is how coercion from characters works: Compared to base R, when x is a character, the `as_factor()` function creates levels in the order in which they appear, which will be the same on every platform. Base R sorts in the current locale which can vary from place to place.
+
+There is no `forcats` alternative for coercing ordinal or ordered factors, so we will be using the base R function `as.ordered()`. 
+
+More generally, when you wish to specify levels or labels when coercing a nominal or ordinal factor, the `fct()` function is useful as it allows for the `levels` argument. `fct()` is from the `forcats` package and is a stricter version of the base R `factor()` that errors if your specification of levels is inconsistent with the values in x.
+
+*Note* As a general syntax note, `tidyverse` functions tend to use `_` whereas base R functions tend to use `.`. 
+
+
+```{r obj-remind}
+# if you are returning to this notebook, you can find where the objects were created by searching with CTRL+F or CMD+F on a Mac 
+
+ii_vec # remind ourselves of the numeric vector we created above 
+
+vlog # and of the logical vector
+```
+
+Logical to nominal and ordinal factor 
+
+```{r fct-coercion-1}
+ii_vec_f <- as_factor(ii_vec)
+
+ii_vec_f 
+
+ii_vec_fo <- as.ordered(ii_vec)
+
+ii_vec_fo
+```
+
+Numeric to nominal and ordinal factor 
+
+```{r fct-coercion-2}
+vlog_f <- as_factor(vlog)
+
+vlog_f
+
+vlog_fo <- as.ordered(vlog)
+
+vlog_fo
+```
+
+Character to nominal and ordinal factor 
+
+```{r fct-coercion-3}
+v_vec_f <- as_factor(c_vec)
+
+v_vec_f
+
+v_vec_fo <- as.ordered(c_vec)
+
+v_vec_fo
+```
+
+Note that the default in R lexical ordering, so alphabetic order, unless otherwise specified. You can specify the order of levels using the `fct` function. 
+
+```{r lexical-ordering}
+mm <- c("Dec", "Apr", "Jan", "Mar")
+
+mm 
+
+typeof(mm)
+
+# by default sorting in R is alphabetical 
+sort(mm)
+```
+
+Lets instead covert `mm` into a factor with levels in a specified order of the calendar months of the year. 
+
+```{r fct-coercion-4}
+# first create a list of the valid levels 
+
+months_levels <- c("Jan", "Feb", "Mar", "Apr", "May", 
+                   "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+## then create the factor
+
+mm_f <- fct(mm, levels = months_levels)
+
+summary(mm_f)
+levels(mm_f)
+is.factor(mm_f)
+is.ordered(mm_f)
+```
+
+Note that `mm_f` is not ordered, rather we have just sorted the factor levels in a useful way. To make the factor ordinal (AKA ordered), we can pass the data object to `as.ordered()` in our tidy data flow.   
+
+```{r fct-coercion-5}
+mm_fo <- mm %>% 
+  fct(levels = months_levels) %>% 
+  as.ordered()
+
+summary(mm_fo)
+levels(mm_fo)
+is.factor(mm_fo)
+is.ordered(mm_fo)
+class(mm_fo)
+```
+
+The code chunk above I have used the tidyverse syntax of the pipe `%>%` as it included more than 1 function. When working with the pipe, we always start with the data objects (in this case `mm`) which is then piped to the function of interest which can be be piped to subsequent functions. When using the pipe you do not need to specify the data argument of functions, as it automatically fills this in for you. 
+
+In plain language, this code says "take the data object mms and then make it a factor with the levels equal to months_levels, and then take that and make it an ordered factor."
+
+Any values not in the levels set will bring up an error when using `fct()`, which is one of the many reasons to use this function. You will not be unintentionally creating missing values with typos!
+
+```{r fct-coercion-6}
+mm_f2 <- fct(c("feb", "Aug", "May", "Jun"), levels = months_levels) # this will produce an error as feb does not exist in month_levels
+
+mm_f2 <- fct(c("Feb", "Aug", "May", "Jun"), levels = months_levels)
+
+mm_f2
+is.factor(mm_f2)
+```
+
+In some case you may wish to order the levels to match how they first appear in the data. We can do that when creating the factor by setting levels to `unique()`, or after the fact, with `fct_inorder()`. When using `fct()` to create a factor, if you do not specify the `levels` argument, by default the levels will be computed from the unique values of x, in the order in which they occur. To be more explicit in your code with your wish to have the levels match how they appear first in the data, you should use `unique()`. 
+
+```{r fct-coercion-7}
+fct(c("Dec", "Apr", "Jan", "Mar"))
+
+# more explicit code, not relying on defaults
+fct(c("Dec", "Apr", "Jan", "Mar"), levels = unique(mm))
+
+```
+
+```{r fct-coercion-8}
+mm_fo %>% 
+  fct_inorder()
+# the levels are now ordered by how they first appeared in the data, not by the months_levels list 
+```
+
+In plain language, the code above says "take the data object mm_fo then take that factor and sort the levels by the order in which they first appear". 
+
+### 5.2 Working with factors 
+
+In the section above we already started looking at some of the functions for working with factors, particularly when creating them. Now let's look at different functions for modifying and working with factors. 
+
+```{r fct-injuries}
+# first lets create an object of unintentional injury types to work with 
+
+injury <- rep(c("Fall", "Fall", "Transport accident", "Crushing",
+                "Scakld", "Accidental exposure"), 4) %>% 
+  factor()
+
+injury
+levels(injury)
+```
+
+As we can see, by default our levels are sorted in alphabetical order. To instead change this to be by the frequency of values, we can do the following: 
+
+```{r fctinfreq}
+fct_infreq(injury) %>% 
+  levels()
+
+## since we have 8 values for Fall, this is put first. The remaining levels all have 4 values, so are sorted in the default alphabetical order 
+
+summary(injury)
+```
+To move or reorder the levels of our factor, we can use `fct_relevel()`
+
+```{r fctrelevel}
+# move Crushing to be first 
+fct_relevel(injury, "Crushing", "Accidental exposure") %>% 
+  levels()
+
+# you can also use indexing 
+## this moves Fall to the 3rd position 
+fct_relevel(injury, "Fall", after = 2) %>% 
+  levels()
+```
+
+In looking at the levels of our factor object, we can see there is a typo in "Scald", Let's fix that with `fct_recode()`
+
+```{r fctrecode}
+# note the syntax where the new level is not a character string but the old level is
+## I often forget this syntax and need to look this up 
+injury <- fct_recode(injury, Scald = "Scakld")  
+
+levels(injury)
+
+# also useful to create new levels entirely and not just fix a typo 
+fct_recode(injury, `New level` = "Fall", `New level 2` = "Crushing") %>% 
+  summary()
+
+# note above I used `` around New level because it includes a space! Remove the `` and see what happens 
+```
+
+To add in additional levels to our factor, we can use `fct_expand()`
+
+```{r fctexpand}
+injury2 <- fct_expand(injury, "Z")
+
+summary(injury2)
+```
+
+We can see that Z has been added, but it is unused. So let's remove it with `fct_drop()`
+
+```{r fctdrop}
+fct_drop(injury2) %>% 
+  summary()
+```
+We can use `fct_collapse()` to collapse or combine levels of a factor into manually defined groups 
+
+```{r fctcollapse}
+fct_collapse(injury2, 
+             Other = c("Fall", "Scald"),
+             Missing = "Z") %>% 
+  summary()
+
+# depending on your use case, can be similar to fct_recode()
+# fct_collapse is particularly useful when you want to combine/collapse levels as well as rename/recode them 
+```
+You can use `fct_lump_()` to collapse the least/most frequent values of a factor into "other"
+
+```{r fctlump}
+fct_lump_min(injury2, min = 5) %>% 
+  levels()
+```
+
+NAs can be either in the levels or values of a factor. Most factors store NAs in the values, as you can see here when converting the `fm` factor object to an integer. 
+
+```{r fctnas-1}
+fm <- fct(c("a", "b", NA, "c", "b", NA))
+
+levels(fm)
+as.integer(fm)
+is.na(fm)
+```
+
+You can change this so that NAs are stored in the levels, though at the cost of `is.na()` reporting accuracy. However, putting NAs in levels allows you to control its display. This is usually something I will do when creating tables or data visualizations where I want to show NA as a level of the factor. 
+
+We can make NAs explicit in the levels of our factor rather than just the values, with the function `fct_explicit_na()`, where the default is to assign the NA level as "(Missing)"
+
+```{r fctnas-2}
+fm2 <- fct_explicit_na(fm)
+
+fm2
+levels(fm2) # notice the level is NA itself, not "NA" as a character string
+as.integer(fm2) # and NA or (Missing) is treated as its own level (4 when converted to an integer as it is the 4th level)
+is.na(fm2) # and due to above, there are no values of NA so is.na evaluates to all FALSE 
+
+## you can also specify what you would like the missing level to be labelled, as above this is by default "(Missing)" 
+fct_explicit_na(fm, na_level = "unknown")
+```
+
+
+## 6. Date and time 
+
+In R, date-time classes are not a primitive data type. Instead, to work with date-time data types we use the `lubridate` package. As mentioned above, depending on the version of `tidyverse` you are using, you may need to call the `lubridate` package separately. 
+
+To get the current date or date-time, we can use the `today()` or `now()` functions
+
+```{r datetimenow}
+# for date object 
+vtoday <- today()
+
+vtoday
+
+# for date-time object 
+vnow <- now() # because we set the system time zone at the top of the document in our libraries code chunk, lubridate already knows what timezone we are in 
+
+vnow
+
+```
+
+We can get the individual components of our datetime and date objects with the accessor functions:
+
+* `year()`
+* `month()`
+* `mday()` (day of the month)
+* `yday()` (day of the year)
+* `wday()` (day of the week)
+* `hour()`
+*` minute()`
+* `second()`
+
+```{r lubridate-1}
+year(vtoday)
+
+month(vtoday)
+
+mday(vtoday)
+
+wday(vtoday)
+
+wday(vtoday, label = TRUE)
+
+wday(vnow, label = TRUE, abbr = FALSE)
+
+hour(vnow)
+
+minute(vnow)
+
+second(vnow)
+
+```
+
+
+The 3 ways you will most likely create a date/time are 
+
+1. from a string using the `lubridate` helper functions to parse the string. These helpers automatically work out the format once you specify the order of the component. To use them, identify the order in which year, month, and day appear in your dates, then arrange “y”, “m”, and “d” in the same order  - which will give you the name of the `lubridate` function
+
+2. individual date-time components spread across multiple columns in a data frame - which we will look at next week 
+
+3. an existing date/time object
+
+Let's look at some of the helper functions in Option 1. 
+
+```{r lubridate-2}
+# month day year input 
+mdy("May 31st, 2024")
+
+# day month year input 
+dmy("31-May-2024")
+
+# year month day input 
+ymd("2024-May-31")
+
+## these functions also take unqrouped numbers 
+
+ymd(20240531)
+
+## you can also use these functions to create a datetime object by adding an _ and h ms or s 
+
+ymd_hms("2023 May 31 15:45:34")
+
+## you can also force the creation of a datetime object by specifying a timezone 
+ymd(20240531, tz = "Europe/London")
+```
+
+To switch between date and date-time objects, you can use `as_datetime()` or `as_date()`
+
+```{r lubridate-3}
+as_datetime(today(tz = "Europe/London"))
+
+as_date(now())
+```
+
+### 6.1 Timezones 
+
+Unless otherwise specified, `lubridate` always uses UTC. UTC (Coordinated Universal Time) is the standard time zone used by the scientific community and roughly equivalent to its predecessor GMT (Greenwich Mean Time). It does not have DST, which makes a convenient representation for computation. To avoid confusion when manually specifying a timezone, R uses the international standard IANA time zones. These use a consistent naming scheme `/`, typically in the form "<continent>/<city>" (there are a few exceptions because not every country lies on a continent). 
+
+To get a list of the timezone names, you can use `OlsonNames()`
+
+```{r olsonnames}
+OlsonNames()
+```
+
+
+Timezones in R are an attribute of date-time that only control printing. For example, these 3 objects represent the same instant in time: 
+
+```{r timezones-1}
+x1 <- ymd_hms("2024-06-01 12:00:00", tz = "America/New_York")
+x1
+
+x2 <- ymd_hms("2024-06-01 18:00:00", tz = "Europe/Copenhagen")
+x2
+
+x3 <- ymd_hms("2024-06-02 04:00:00", tz = "Pacific/Auckland")
+x3
+
+```
+
+You can verify they are the same using subtraction 
+
+```{r timezones-2}
+x1 - x2
+# Time difference of 0 secs
+
+x1 - x3
+# Time difference of 0 secs
+```
+
+You can change timezone in 2 ways:
+
+* `with_tz()`: to keep the instant in time the same, and change how it’s displayed. Use this when the instant is correct, but you want a more natural display
+
+* `force_tz`: to change the underlying instant in time. Use this when you have an instant that has been labelled with the incorrect time zone, and you need to fix it
+
+
+```{r withtz}
+x4 <- c(x1, x2, x3)
+x4
+
+x4a <- with_tz(x4, tzone = "Australia/Lord_Howe")
+
+x4a
+
+# no difference in the instance of time between x4 and x4a
+x4a - x4
+```
+
+```{r forcetz}
+x4b <- force_tz(x4, tzone = "Australia/Lord_Howe")
+x4b
+
+# there is a difference in the instance of time as we changed this with force_tz. Compare to above 
+x4b - x4
+```
+
+### 6.2 Arithmetic with date and time data 
+
+In `lubridate` there are 3 important classes to represent time spans 
+
+* **durations**: which represent an exact number of seconds 
+
+* **periods**, which represent human units like weeks and months
+
+* **intervals**, which represent a starting and ending point
+
+#### 6.2.1 Durations 
+
+In R, when you subtract two dates, you get a `difftime` object, which records a time span of seconds, minutes, hours, days, or weeks. This ambiguity can make `difftimes` a little painful to work with, so we can use `duration` instead! 
+
+```{r difftime-duration}
+# difftime 
+tdiff <- today() - ymd(20221014)
+
+tdiff
+class(tdiff)
+
+# duration 
+tdiff_d <- as.duration(tdiff)
+
+tdiff_d
+class(tdiff_d)
+```
+
+Durations always record the time span in seconds. Larger units are created by converting minutes, hours, days, weeks, and years to seconds at the standard rate (60 seconds in a minute, 60 minutes in an hour, 24 hours in day, 7 days in a week, 365 days in a year). 
+
+Durations can be created with the following constructor functions: 
+
+* `dseconds()`
+* `dminutes()`
+* `dhours()`
+* `ddays()`
+* `dweeks()`
+* `dyears()`
+
+*Note* a month is not a duration of time defined independently of when it occurs, but a special interval between two dates. Thus there is not a need for `dmonths()`
+
+Durations can be added or multiplied as well as added or subtracted to and from days. 
+
+```{r duration-1}
+2 * dyears(1)
+
+dyears(2) + dweeks(10) + dhours(15)
+```
+
+
+```{r duration-2}
+tomorrow <- today() + ddays(1)
+
+tomorrow
+class(tomorrow)
+
+last_year <- today() - dyears(1)
+
+last_year
+class(last_year) 
+```
+Because Durations represent an exact number of seconds, sometimes you might get an unexpected result...
+
+```{r durations-2}
+one_pm <- ymd_hms("2016-03-12 13:00:00", tz = "America/New_York")
+
+one_pm
+
+one_pm + ddays(1)
+```
+
+Why is one day after 1pm on March 12, 2pm on March 13?! If you look carefully at the date you might also notice that the time zones have changed. Because of DST, March 12 only has 23 hours, so if we add a full days worth of seconds we end up with a different time! 
+
+#### 6.2.2 Periods 
+
+Periods are time spans but don’t have a fixed length in seconds, instead they work with “human” times, like days and months. That allows them to work in a more intuitive way. 
+
+```{r periods-1}
+one_pm
+
+one_pm + days(1)
+```
+
+Like Durations, Periods can be created with constructor functions: 
+
+* `seconds()`
+* `minutes()`
+* `hours()`
+* `days()`
+* `months()`
+* `weeks()`
+* `years()`
+
+Similarly, Periods can also be added or multiplied as well as added to dates. 
+
+```{r periods-2}
+10 * (months(6) + days(1))
+
+days(50) + hours(25) + minutes(2)
+```
+When adding to dates, compared to Durations, Periods are more likely to do what you expect:
+
+```{r periods-3}
+# A leap year
+## duration 
+ymd("2024-01-01") + dyears(1)
+
+## period
+ymd("2024-01-01") + years(1)
+
+# Daylight Savings Time
+## duration 
+one_pm + ddays(1)
+
+## period
+one_pm + days(1)
+```
+
+#### 6.2.3 Intervals 
+
+An Interval is a Duration with a starting point, making it so precise you can determine exactly how long it is. You can make an interval with `interval()` or `%--%` 
+
+```{r intervals-1}
+next_year <- today() + years(1)
+next_year
+class(next_year)
+
+int_ny <- (today() %--% next_year)
+int_ny
+class(int_ny)
+
+# we can use integer division to find out how many Periods fall in an Interval 
+(today() %--% next_year) %/% days(1)
+
+```
+
+The take home message around durations, periods, and intervals is: 
+
+> Follow Occum's Razor and always, pick the simplest data type and structure that solves your problem. If you only care about physical time, use a duration; if you need to add human times, use a period; if you need to figure out how long a span is in human units, use an interval.
+
+For a summary of the permitted arithmetic operations between different date and time data types see the figure below 
+
+![Permitted arithmetic operations between date and time classes](../figures/R_lubridate_arithmetic.png)
+
+*Note* For the above code to work you will need to have the image in a higher level folder called figures in your working directory. This should be the case if you cloned from the course GitHub repository. If you have another set up, update the file path accordingly.
+
+
+## 7. Missing data 
+
+In R, NA is a valid logical object, where as NaN is a special double-precision floating point number representing missing data. When using logical operators, where a component of one of the operands is NA, the result will be NA if the outcome is ambiguous. In other words, NA & TRUE evaluates to NA while NA & FALSE evaluates to FALSE. 
+
+```{r na-1}
+typeof(NA)
+
+NA & TRUE 
+
+NA & FALSE
+```
+
+```{r nan}
+typeof(NaN)
+class(NaN)
+```
+
+For most R functions, missing values are "infectious": whenever a missing value is present, the result will always be missing. You can check if there are missing values using `is.na()` which returns a logical vector
+
+```{r na-2}
+num_obj2 <- c(NA, 6, 78, 230, 3, 39)
+
+is.na(num_obj2)
+
+```
+
+To get the not NA values, we can use the ! (not) operator or `complete.cases()` which returns a logical vector indicating which cases are complete
+
+```{r na-3}
+!is.na(num_obj2)
+
+complete.cases(num_obj2)
+```
+
+
+When computing mathematical operations with missing data, most R functions will return NA. This is the case for `abs()`, `sum()`, `min()`, and `max()` described above in the Numeric section. Luckily, there is a logical argument `na.rm = TRUE/FALSE` that can be specified. This asks, 'should missing values (NA and NaN) be removed?' By default, this is typically set to FALSE. When you pull up the documentation for a function in R (`?function()`) if you look under 'Usage' you can see what the default behaviors are for different arguments. Try this for `sum()`
+
+In general, most R functions have a means of dealing with missing values. Not all will use `na.rm`, so it is good practice to check the documentation when using a new function not only to double-check that the default behavior is as you expect, but also to see how to deal with missing data. 
+
+```{r sum-na}
+sum(num_obj2)
+
+sum(num_obj2, na.rm = TRUE)
+```
+
+When working with characters, you can use `str_replace_na()` to replace missing values with your desired input value. By default, NA will be replaced with the character string "NA"
+
+```{r na-chr}
+str_ex <- c(NA, "abc", "def")
+
+str_replace_na(str_ex)
+
+## you can also specify the replacement
+
+str_replace_na(str_ex, replacement = "Missing")
+
+```
+
+More generally, the `replace_na()` function from the `tidyr` package in the tidyverse is useful to replace NA values with a specified value. Particularly when working with data frames this is a useful function. 
+
+```{r rpl-na}
+num_obj2 %>% 
+  replace_na(replace = 0)
+
+# Note: replacing NAs with 0 is not always good practice, particularly when 0 is meaning in the context of the data. You need to think carefully about your data and what is appropriate. 
+```
+
+What happens if we try to replace the missing numeric value with a character string? 
+
+```{r rpl-na-2}
+# uncomment the code below to find out 
+#num_obj2 %>% 
+#  replace_na(replace = "missing") 
+```
+
+Oh no! A data type error! Because `num_obj2` is numeric/double, the missing value must also be replaced with a numeric value. 
+
+When working with data frames, to fill missing values in selected columns using the next or previous entry, we can use the `fill()` function from `tidyr`. This is useful in the common output format where values are not repeated, and are only recorded when they change. Additionally, to exclude rows with missing data there is the `drop_na()` function from `tidyr`. We will explore this more next week! 
+
+That's all for now around missing data - we will return to this topic next week in greater detail with different data structures. 
+
+
+## 8. You did it! 
+
+Well done for making it to the end of this notebook. If you have not done so yet, move to the Python data types notebook next. 
+
+---
+*Dr. Brittany Blankinship (2024)* 
