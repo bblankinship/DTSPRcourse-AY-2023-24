@@ -1,0 +1,711 @@
+---
+title: "Tutorial 3: Working with data types in R - SOLUTIONS"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    toc: true
+    toc_float: 
+      toc_collapsed: true
+    toc_depth: 4
+    theme: lumen
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tutorial 3
+
+There are 11 Tasks in this notebook (though warning some tasks include more than one task) and 3 sections in this tutorial notebook that you can choose between: 
+
+1. String data 
+2. Categorical data (and Boolean and Numeric and Missing) which includes some advanced bonus tasks
+3. Date and time data (and string)
+
+The aim of this tutorial notebook is to give you some (guided) hands-on experience working with different data types in R. Which you can then compare with the approaches to working with these data types in Python.
+
+
+```{r libraries, message = FALSE, echo = FALSE}
+# it is always good practice to load the packages needed for the document at the top
+
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+
+## 1. String data 
+
+### Task 1 
+
+Explain why each of following strings don’t match `\`: 
+
+* `"\"`
+
+* `"\\"`
+
+* `"\\\"`
+
+**Your answer here:**
+* `"\"`:
+
+* `"\\"`:
+
+* `"\\\"`:
+
+#### Task 1 Solution 
+
+* `"\"`: This will escape the next character in the R string.
+
+* `"\\"`: This will resolve to \ in the regular expression, which will escape the next character in the regular expression.
+
+* `"\\\"`: The first two backslashes will resolve to a literal backslash in the regular expression, the third will escape the next character. So in the regular expression, this will escape some escaped character.
+
+### Task 2 - 6
+
+There is a corpus of common words in the `stringr` package that we can access with the code `stringr::words`
+
+```{r word-corpus, echo = FALSE}
+words <- stringr::words
+```
+
+Find all the words that: 
+
+Task 2: Start with "y"
+Task 3: End with "w"
+Task 4: Are exactly 3 letters long
+Task 5: Have 8 letters or more
+Task 6: contain only consonants
+ 
+
+Tasks 3, 4, and 5 are a bit more tricky. To really stretch yourself, consider using code to produce the answer to the above questions once you have a solution.
+
+**Hint 1** one notation in regular expressions that was not covered in detail in the R data types notebook is the dot character `.`, which matches any single character expect a new line 
+
+**Hint 2** Since this list is long, you might want to use the match argument to `str_view()` to show only the matching or non-matching words. There are, however, numerous functions you could use to solve these tasks. 
+
+**Hint 3** as well as the hint above, for task 6, the `negate` argument of `str_subset()` could be helpful. Look up the documentation of the function(s) you are using to solve these tasks to see if there are arguments that could help you if you were to change the default behavior  
+
+**Hint 4** How to use code to produce the answer? There are at least 2 ways we have touched on that you could do this with R. (1) using RMarkdown features or (2) using string interpolation which we learned about this week in the R data types notebook (see section 4). 
+
+
+```{r task2}
+## your answer here 
+
+
+```
+
+```{r task3}
+## your answer here 
+
+
+```
+
+```{r task4}
+## your answer here 
+
+
+```
+
+```{r task5}
+## your answer here 
+
+
+```
+
+```{r task6}
+## your answer here 
+
+
+```
+
+#### Task 2-6 Solution 
+
+There are a handful of functions you could use from the `stringr` package to solve these tasks. The primary functional difference being if you want to get a subset of data matching the pattern (e.g., using `str_subset()` or `str_view()`) or to know the number of items that match the pattern (e.g., using `str_detect()` or `str_count()` and then `sum()`. 
+
+To produce the answer with code, you would either use (1) inline code in the RMD document or (2) interpolating strings wth `str_glue()`
+
+```{r t2}
+# Task 2: start with "y"
+
+# solutions to get the number of words that match our pattern criteria
+## str_detect() solution 
+task2 <- str_detect(words, pattern = "^y") %>% 
+  # since TRUE evaluates as 1, we can use this to our advantage and sum the results 
+  sum()
+
+## str_count() solution 
+str_count(words, pattern = "^y") %>% 
+  # again using truthy to our advantage 
+  sum()
+
+# solutions to see the words that match our pattern criteria 
+## str_view() solution 
+str_view(words, pattern = "^y", match = TRUE)
+
+## str_subset solution 
+str_subset(words, pattern = "^y")
+```
+
+There are `r task2` words that start with 'y' in the data.
+
+*Note* with the inline code solution, you would only see the answer when knitting or rendering the document. This can be incredibly useful though for creating reports which need to be rerun when new data comes in. 
+
+```{r t3}
+# Task 3: End with "w"
+
+# solutions to get the number of words that match our pattern criteria
+## str_detect() solution 
+task3 <- str_detect(words, pattern = "w$") %>% 
+  # since TRUE evaluates as 1, we can use this to our advantage and sum the results 
+  sum()
+
+## str_count() solution 
+str_count(words, pattern = "w$") %>% 
+  # again using truthy to our advantage 
+  sum()
+
+# solutions to see the words that match our pattern criteria 
+## str_view() solution 
+str_view(words, "w$", match = TRUE)
+
+## str_subset solution 
+str_subset(words, pattern = "w$")
+
+```
+
+```{r t3-answer}
+str_glue("There are {task3} words that end with 'w' in the data.")
+```
+
+```{r t4}
+# Task 4: Are exactly 3 letters long
+
+# solutions to get the number of words that match our pattern criteria
+## str_detect() solution 
+task4 <- str_detect(words, pattern = "^...$") %>% 
+  sum()
+
+## str_count() solution 
+str_count(words, pattern = "^...$") %>% 
+  sum()
+
+# solutions to see the words that match our pattern criteria 
+## str_view() solution - but since the output is so long, it is not the most efficient 
+str_view(words, pattern = "^...$", match = TRUE)
+
+## str_subset solution - but since the output is so long, it is not the most efficient 
+str_subset(words, pattern = "^...$")
+```
+
+```{r t4-answer}
+str_glue("There are {task4} words with exactly 3 letters in the data.")
+```
+
+
+```{r t5}
+# Task 5: Have 8 letters or more
+
+# solutions to get the number of words that match our pattern criteria  
+## str_detect() solution 
+task5 <- str_detect(words, pattern = "........") %>% 
+  sum()
+
+## str_count() solution 
+str_count(words, pattern = "........") %>% 
+  sum()
+
+# solutions to see the words that match our pattern criteria 
+## str_view() solution - but since the output is so long, it is not the most efficient 
+str_view(words, pattern = "........", match = TRUE)
+
+## str_subset solution - but since the output is so long, it is not the most efficient 
+str_subset(words, pattern = "........")
+```
+
+There are `r task5` words with 8 or more letters in the data. 
+
+```{r t6}
+# Task 6: contain only consonants 
+
+# solutions to get the number of words that match our pattern criteria  
+## str_detect() solution to get the number 
+task6 <- str_detect(words, pattern = "[aeiou]", negate = TRUE) %>%
+  sum()
+
+## str_view() solution 
+str_view(stringr::words, "[aeiou]", match = FALSE)
+
+# solution to see the words that match our pattern criteria 
+## str_view() solution 
+str_view(words, pattern = "[aeiou]", match = FALSE)
+
+## str_subset() solution 
+str_subset(stringr::words, pattern = "[aeiou]", negate = TRUE)
+
+```
+
+```{r t6-answer}
+str_glue("There are {task6} words which contain only consonants in the data.")
+```
+
+## 2. Categorical data (and Boolean and Numeric and Missing) 
+
+Again, R will help us when working with factors by providing a useful built-in dataset. `forcats::gss_cat` is a sample of data from the General Social Survey, which is a long-running US survey conducted by the independent research organization NORC at the University of Chicago. As the survey has thousands of questions, the `gss_cat` data contains a small subset. 
+
+Since this data set is provided by a package, you can get more information about the variables with `?gss_cat`
+
+```{r gss-cat}
+# lets save the data into an object in our global environment 
+gss_cat <- forcats::gss_cat %>% 
+  select(-denom) #remove the denom variable as we will not be needing it 
+
+## we will learn more about data frames next week, but as mentioned in the R notebook this week, one of the functions to get a summary of what a data frame contains is dplyr::glimpse()
+
+glimpse(gss_cat)
+
+## another similar function with slightly different information is str() - what different information to glimpse() do you notice? 
+
+str(gss_cat)
+```
+
+```{r task7}
+## your answer here 
+
+
+```
+
+### Task 7
+What data types are the different variables in `gss_cat`? If there are factors, are they nominal or ordinal? What are the levels of the factors? Should or could any of the variable be represented differently in terms of data type?
+
+Go through the data set one column at a time answering the above questions for each of the 8 columns. 
+
+**Hint 1** with a data frame you can use `pull(column)` to extract a single column in a tidyverse data flow `data %>% pull(column) %>% [some other functions of your choosing]`
+
+**Hint 2** the membership functions which produce a Boolean value output may be useful here
+
+**Hint 2** the `summary()` and `levels()` functions may also be useful 
+
+#### Task 7 Solution 
+
+```{r gss-cat-year}
+gss_cat %>% 
+  pull(year) %>% 
+  is.integer()
+
+# to get summary statistics of the integer variable 
+gss_cat %>% 
+  pull(year) %>% 
+  summary()
+```
+
+`Year` is an integer ranging from 2000 to 2014, but may be suited as an ordered factor depending on the use case. 
+
+```{r gss-cat-marital}
+gss_cat %>% 
+  pull(marital) %>% 
+  # is.factor() 
+  is.ordered()
+
+## one of the cool things of a tidyverse workflow using the pipe is you can comment out lines of code and you do not want to run now, but may wish to run later. To check if marital was first a factor I commented out is.ordered so it did not run. Then I commented out is.factor and let the pipe go to is.ordered
+
+gss_cat %>% 
+  pull(marital) %>% 
+  levels()
+```
+
+`Marital` is an unordered factor (nominal categorical data tye) comprised of 6 levels. It makes sense to keep `marital` as a nominal categorical data type, though having "Never married" sorted as the first level then "Married" followed by "Separated", "Divorced", "Widowed", and "No answer" would make sense for some data presentations. 
+
+```{r gss-cat-age}
+gss_cat %>% 
+  pull(age) %>% 
+  is.integer()
+
+gss_cat %>% 
+  pull(age) %>% 
+  summary()
+```
+
+`Age` is an integer ranging from 18 to 89. Depending on the analytic use case, `age` could also work as an ordered factor variable with user-determined-determined age brackets. 
+
+```{r gss-cat-race}
+gss_cat %>% 
+  pull(race) %>% 
+  is.factor() 
+  #is.ordered()
+
+gss_cat %>% 
+  pull(race) %>% 
+  summary() # to see not only the list of levels but also the number of values/observations per level
+```
+
+`Race` is an unordered factor comprised of 4 levels. It makes sense to keep `race` as a nominal categorical variable. 
+
+```{r gss-cat-rincome}
+gss_cat %>% 
+  pull(rincome) %>% 
+  is.factor() 
+  #is.ordered()
+
+gss_cat %>% 
+  pull(rincome) %>% 
+  levels()
+```
+
+`rincome` is an unordered factor with 16 levels. Depending on the amount of detail needed for analysis of this variable, it would make sense to collapse some levels together and make the variable an ordered factor. It could also be useful to convert to a character string in some instances.
+
+```{r gss-cat-partyid}
+gss_cat %>% 
+  pull(partyid) %>% 
+  is.factor() 
+  #is.ordered()
+
+gss_cat %>% 
+  pull(partyid) %>% 
+  levels()
+```
+
+`partyid` is an unordered factor with 10 levels. In some use cases it may be useful to make this variable an ordered factor, ordering the levels according to how they fall on the political spectrum. 
+
+```{r gss-cat-relig}
+gss_cat %>% 
+  pull(relig) %>% 
+  is.factor() 
+  #is.ordered()
+
+gss_cat %>% 
+  pull(relig) %>% 
+  levels()
+```
+
+`relig` is an unordered factor with 16 levels. It makes sense to keep `relig` as a nominal categorical variable.
+
+```{r gss-cat-tvhours}
+gss_cat %>% 
+  pull(tvhours) %>% 
+  is.integer()
+
+gss_cat %>% 
+  pull(tvhours) %>% 
+  summary()
+```
+
+`tvhours` is an integer ranging from 0 to 24. Depending on the analytic use case, `tvhours` could also work as an ordered factor variable with user-determined-determined category levels. 
+
+### Task 8
+
+Make `age` a factor and the missing value `NA` a factor level rather than a value. Think about the logical steps you need to take to complete the task first before writing any code. When modifying an object by changing values or the data type, it is good practice to create a new object rather than over-write the original one.
+
+```{r age}
+age <- gss_cat %>% 
+  pull(age) # this selects only the age column which you can then work with for the task. Next week we will look at how to manipulate columns in a dataframe without subsetting them 
+```
+
+
+**Hint 1** `fct` only takes character vectors as an input
+
+**Hint 2** there is a specific function that will make the NAs explicitly a level rather than a value for us. Depending on the version of `forcats` you are using this function will vary 
+
+```{r task8}
+## your answer here 
+
+
+```
+
+#### Task 8 Solution
+
+```{r age-factor-vector}
+# first lets look at a summary of age
+## it is always good practice to check the data before manipulating it 
+summary(age)
+
+age_f <- age %>% 
+  # first make age a character as the fct() function requires character input 
+  as.character() %>% 
+  # then make it a factor 
+  fct() %>% 
+  fct_explicit_na() # if you are using forcats 1.0.0, this function has been superseded by fct_na_value_to_level()
+
+levels(age_f)
+class(age_f)
+```
+
+### Task 8 advanced 
+
+It is a bit more advanced to from here make `age` an ordinal categorical data type with 5 levels: 18-25, 26-44, 45-64, 65-74, 75+. To so do, we can use `case_when()` which is similar to an `if else` statement, but an R function.
+
+Before looking at the solution, challenge yourself to think about the logical steps needed to solve this problem. Write them down and see how they match up to the solution provided.
+
+**Your answer to the logical steps:**
+1. .....
+2. .....
+3. .....
+4. .....
+      .....
+
+As we have not learned about this function yet, I will show you the solution and ask for you to try and figure out how it works. Modify some of the code to see what happens. Do not worry, you cannot break your computer (unless you throw it perhaps)! If you have any errors you cannot figure out, ask one of the teaching team for help during the tutorial or post on the discussion boards afterwards. 
+
+```{r age-groups}
+## first create the age groups
+age_groups <- case_when(
+    age <= 25 ~ "18-25",
+    age > 25 & age <= 44 ~ "26-44",
+    age > 44 & age <= 64 ~ "45-64",
+    age > 64 & age <= 75 ~ "65-74",
+    age > 74 ~ "75+"
+    )
+
+## then make that a factor and an ordered factor specifically 
+age_fo <- age_groups %>% 
+  fct(levels = c("18-25", "26-44", "45-64", "65-74", "75+")) %>%
+  # make missing values explicit as a factor level 
+  fct_explicit_na() %>% 
+  as.ordered()
+
+summary(age_fo)
+is.ordered(age_fo)
+```
+
+An *even more advanced* solution, for those who are interested, is to do the steps above using the data frame data structure. This is actually quite straight forward in the tidyverse as we can use the `mutate` function to create, modify, and delete columns in the data frame. `mutate()` will create a new column as a function of an existing one. In fact, we can do all of the steps above in the single mutate function by calling our newly created variable and doing more things to it! Lets see how this works. 
+
+```{r age-groups-mutate}
+## start with data frame object - all tidyverse data flows start with a data object 
+gss_cat <- gss_cat %>%
+  mutate(
+    # with mutate you need to first specify the name of the new column and then after the = what you want it to have done
+    age_group = dplyr::case_when(
+      age <= 25 ~ "18-25",
+      age > 25 & age <= 44 ~ "26-44",
+      age > 44 & age <= 64 ~ "45-64",
+      age > 64 & age <= 75 ~ "65-74",
+      age > 74 ~ "75+"),
+    age_group = fct(age_group, levels = c("18-25", "26-44", "45-64", "65-74", "75+")),
+    age_group = fct_explicit_na(age_group),
+    age_group = as.ordered(age_group)
+    )
+
+## now when we look at the structure summary of gss_cat there is a new column at the end called age_group!
+## and we still have our original column age as well 
+str(gss_cat)
+
+## and we can confirm that our code worked as expected by inspecting age_group 
+gss_cat %>% 
+  pull(age_group) %>% 
+  summary() ## happy days! 
+```
+
+### Task 9 
+
+How could you collapse `rincome` into a small set of categories (e.g., `"Unknown"`, `"less than $5000"`, `"$5000 to $9999"`, `"$10000 or more"`)
+
+Look at a summary of the vector and think about some of the challenges that you need to overcome to complete the task. Write down the steps you would need to take in plain language, regardless of if you know how to do it in code. Understanding **what** you need to do is just an important, if not more so, than **how** you will do it (i.e., in code).
+
+You can also look back at your solution to Task 7 above. 
+
+```{r rincome}
+rincome <- gss_cat %>% 
+  pull(rincome) # this selects only the rincome variable which you can then work with for the task. Next week we will look at how to manipulate columns in a dataframe without subsetting them 
+
+summary(rincome)
+
+is.factor(rincome)
+```
+
+
+**Your answer to the logical steps:**
+1. .....
+2. .....
+3. .....
+4. .....
+      .....
+      
+#### Task 9 Solution 
+
+`rincome` is currently a factor variable, which is great as that the data type we want. However, it is a messy factor. The levels do not have consistent naming conventions (some say "to" and other use "-") so we would need to fix that. Then, we will want to group all of the non-responses into one category. Next, we need to group the responses into the 3 levels. However, the factor level labels are character strings, so we will need to use some string functions and really consider how these labels are structured to avoid writing out all 16 factor levels in our code solution. Then we will want to make this an ordered factor. 
+
+
+### Advanced bonus task (Task 9) 
+
+The advanced bonus task, should you choose to accept it, is to attempt your solution to Task 9 in code! See how far you can get! Have a look at the solutions document for a worked solution to this task.
+
+```{r task9-adv}
+## your answer here 
+
+
+```
+
+#### Advanced bonus task Solution (Task 9) 
+
+If you completed the task, you may have come up with a different solution, which is great! If you did, post it on the discussion boards so we can all learn from each other. 
+
+Remember, in R, there are many ways to do the same thing. As long as your code does what you want, you can then work on understanding what you code is doing and why. Below is the solution I came up with:
+
+```{r adv-bonus-solution}
+rincome_f <- rincome %>% 
+  # first fix all the factors to be labelled consistently 
+  fct_recode(`$20000 to 24999` = "$20000 - 24999",
+             `$15000 to 19999` = "$15000 - 19999",
+             `$10000 to 14999` = "$10000 - 14999"
+             ) %>% 
+  # next collapse the factor levels, but we need to use str_c and an awareness of the character string structure within the collapse function to avoid having to type out all of the levels individually
+  fct_collapse(
+    Unknown = c("No answer", "Don't know", "Refused", "Not applicable"),
+    # notice that becuase of the spaces in the level names we need to use ``
+    `less than $5000` = c("Lt $1000", 
+                # here string combine labels with '$' 'range of numbers' and 'to' 'range of numbers' as that is how the labels are structured 
+                          str_c("$", c("1000", "3000", "4000"),
+                                # the spaces on either side of 'to' are crucial, else it would not work! 
+                                " to ", c("2999", "3999", "4999"))), 
+    `$5000 to $9999` = str_c("$", c("5000", "6000", "7000", "8000"),
+                             " to ", c("5999", "6999", "7999", "9999")),
+    `$10000 or more` = c("$25000 or more", str_c("$", c("10000", "15000", "20000"),
+                                                 " to ", c("14999", "19999", "24999")))
+  )
+
+summary(rincome_f) ## and take a deep breath, maybe go for a walk! 
+```
+
+## 3. Date and time data (and string)
+
+### Task 10 
+
+Create a vector of dates giving the first day of every month in 2016. Next, create a vector of dates giving the date (day) today in every month in the current year.
+
+**Hint 1** Periods will be helpful here as well as a `lubridate` helper function to parse a string into specified date format 
+
+**Hint 2** for the second task, try not to hard code the current year but instead use one of the functions we learned about that can give us the date today 
+
+
+```{r task10}
+## your answer here 
+
+
+```
+
+
+#### Task 10 Solution
+
+```{r month-2016}
+ymd("2016-Jan-01") + months(0:11) 
+# because we are adding these period months to our ymd formatting date of Jan (i.e., 1) I put 0:11 so that the output is in the order of calendar months. 1 + 1 = 2 whereas 1 + 0 = 1. Change this to 1:12 and see what happens 
+```
+
+```{r month-today}
+ymd(today()) + months(0:11) 
+# as above, 0:11 is used so that the output starts to the current month. Otherwise, it would be 06 + 01 so starting at 07. Change the code to 1:12 to confirm 
+```
+
+### Task 11 
+
+This is a big one, so I have separated the task into different parts. By the end, you will have made a countdown clock to your birthday! (how cool!)
+
+We will start by making a countdown clock until the annual Fringe Festival here in August. The festival starts on 2 August 2024 at 13:35. 
+
+### Step 1 
+
+Create a datetime object with the Fringe date and time and set the correct time zone (i.e., Edinburgh)
+
+
+```{r task11-step1}
+## your answer here 
+
+
+```
+
+
+#### Step 1 Solution
+
+```{r fringedatatime}
+Fringe_date <- dmy_hm("2 August 2024 13;35", tz = "Europe/London")
+
+Fringe_date
+```
+
+### Step 2 
+
+Create a countdown date object using arithmetic from the fringe datetime until now. 
+
+**Hint 1** Intervals will be helpful here as we are working with a time span in human units
+
+**Hint 2** When working with intervals remember that we can use integer division to find out how many Periods fall in an Interval 
+
+**Hint 2** Use one of the `lubridate` functions to get the date and time now, rather than hard coding it  
+
+
+```{r task11-step2}
+## your answer here 
+
+
+```
+
+
+#### Step 2 Solution
+
+```{r countdown-obj}
+# create countdown_day by creating an interval between fringe date from now
+countdown_day <- (now(tz = "Europe/London") %--% Fringe_date) %/% days(1)
+```
+
+
+### Step 3 
+
+Write an interpolating character string which will take our countdown object and tell us how many days until Fringe! 
+
+
+```{r task11-step3}
+## your answer here 
+
+
+```
+
+#### Step 3 Solution
+
+```{r countdown-output}
+str_glue("Countdown to Fringe 2024: {countdown_day} days")
+
+```
+
+### Step 4 
+
+Put it all together and instead of Fringe, use your next birthday! Be sure to update the interpolating character string to reflect the new countdown event
+
+
+```{r task11-step4}
+## your answer here 
+
+
+```
+
+### Step 4 Solution 
+
+My birthday is on July 4th, so I have provided an example solution with that date. 
+
+```{r BB-bday}
+birthday <- mdy("July 4 2024", tz = "Europe/London")
+
+countdown_bday <- (now() %--% birthday) %/% days(1)
+
+str_glue("Birthday countdown: {countdown_bday} days")
+```
+
+## Bonus 
+
+If you are interested is how I exported the data into a CSV to then use in Jupyter notebooks, see below! The `write_csv()` function saves the day. Check the documentation of the function if you want to learn more 
+
+```{r data-for-Python, eval = FALSE}
+write.csv(stringr::words, file = "Common Words2.csv",
+          row.names = FALSE) 
+# because words is a vector, I needed to use the Base R function (write.csv) as the tidyverse function below (write_csv) only takes data frames as inputs - data structures do matter! 
+
+## change the code on line 484 to write_csv and see if you can understand the error message 
+
+write_csv(forcats::gss_cat %>% select(-denom), file = "gss_cat.csv")
+```
+
+
+Well done! You have completed all of the tasks for the R notebook for this tutorial. If you have not done so yet, now move to the Python notebook.
+
+---
+*Dr Brittany Blankinship (2024)* 
+
