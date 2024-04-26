@@ -1,0 +1,708 @@
+---
+title: "Essential data structures in R"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This notebook has 5 sections: 
+
+1. Vectors
+2. Arrays
+3. Lists
+4. Named lists
+5. Data frames/tibbles  
+  - 5.1 Missing data in data frames
+
+```{r libraries, message = FALSE}
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+```
+
+
+## 1. Vectors 
+
+Vectors are the 'nuts & bolts' of R in terms of data structures as they are the basis for all other data structures, including the more complex and frequently used data frame. A vector is a collection of objects in a particular order were each object can be indexed by referring to its position. The data types in a vector must all be the same.  
+
+You can create a vector with `c()` and determine the type of a vector with `typeof()` and its length with `length()`. Vectors are fundamental to working in R. While you make not create a stand alone vector as a data structure in every data analysis project, you will certainly use a vector at some point within a function to include a more than one data element. 
+
+```{r vector}
+vec <- c(1, 4, 6, 78, 34.5)
+
+typeof(vec)
+
+length(vec)
+
+print(vec)
+```
+
+Note that when you include a single character in a vector, the entire vector is parsed as a character in order to maintain a homogeneous type. 
+
+The hierarchy of data types in R are logical > numeric > character. All logical values could be numeric or character, but not in the other direction - not all numeric or character values could be logical. Just as not all character values could be numeric, though all numeric values could be a character string. For this reason, when you include a character in a vector, the rest of that vector is parsed as a character string in order to keep a homogeneous data type in the data structure. 
+
+```{r vec-2}
+vec_c <- c(1, 4, 6, 78, 34.5, "5")
+
+typeof(vec_c)
+
+length(vec_c)
+
+print(vec_c) # notice the output is all in "" denoting character strings 
+```
+
+Similarly, if you have a logical vector and include a number, it will parse the logical values as numeric/double 1s and 0s
+
+```{r vec-3}
+vec_n <- c(TRUE, FALSE, TRUE, 4)
+
+typeof(vec_n)
+
+print(vec_n)
+```
+
+You can name a vector in 3 ways: 
+
+```{r vec-name-1}
+# When creating it: 
+x1 <- c(a = 1, b = 2, c = 3)
+print(x1)
+```
+
+```{r vec-name-2}
+# By assigning a character vector to names()
+x2 <- 1:3
+names(x2) <- c("a", "b", "c")
+print(x2)
+```
+
+```{r vec-name-3}
+# Inline, with setNames():
+x3 <- setNames(1:3, c("a", "b", "c"))
+print(x3)
+```
+
+It is good practice to have names be unique, and non-missing, though this is not enforced by R. So be careful when manually creating a named vector! 
+
+```{r vec-manual}
+vec_m <- c(a = 1, a = 2, c = 3)
+
+print(vec_m)
+```
+
+Indexing vectors can be done with square brackets as follows: 
+
+`vector[]` is a way to call up a specific element of a vector.
+`vector[1]` is the first element.
+`vector[3]` is the third element.
+`vector[-3]` is a vector with everything but the third element.
+
+```{r vec-index}
+vec #to remind us what vec includes 
+
+vec[1]
+
+vec[3]
+
+vec[-3]
+```
+
+Using this indexing notation, we can remove elements in our vector. To replace elements, we can either use indexing and assign a new value or use the aptly named `replace()` function. In general, using the `replace()` function and creating a new object when modifying a vector is recommended. 
+
+```{r vec-modify}
+# remove the 3rd element (value 6) and save into a new object
+vec_sub <- vec[-3]
+vec_sub
+```
+
+```{r vec-modify-2}
+
+# replace value 4 with 100
+
+## with indexing
+vec[2] <- 100
+vec
+
+## with replace function 
+vec_rep <- vec %>% 
+  replace(vec == 4, 100)
+
+vec_rep
+```
+
+
+We can do arithmetic with vectors in a similar manner as we have with numeric data (integers and doubles). When we use operators we are doing something element by element or "elementwise." However, note that the vectors will need be of a numeric data type in order to do arithmetic. 
+
+```{r vec-arithmetic}
+## produces an error because vec_c is type character 
+vec + vec_c 
+
+# lets create another numeric vector also with 5 elements
+vec2 <- rep(1:5)
+
+# and then add them together 
+vec + vec2
+```
+
+Notice that we did not add all of the values together but we added both of the first values from `vec` and `vec2`, then the second values and so on. This is important to note because you must make sure whether you wish to have elementwise operations or not.
+
+```{r vec-elementwise}
+# vector multiplication
+vec*vec2
+
+# vector division
+vec/vec2
+
+# vector modulus 
+vec %% vec2
+```
+
+**Recycling** can be a very big problem within data analysis. Recycling is what happens when performing operations on vectors that do not have the same length. Both `vec` and `vec2` have a length of 5. Let's create a vector with length of 10 and consider what happens: 
+
+```{r vec-recyle}
+vec3 <- rep(1:10)
+
+vec3 # numbers 1 through 10 
+vec2 # numbers 1 through 5
+
+vec2 + vec3
+```
+
+Notice that R did not give us an error, but rather carried on adding our two vectors together. The importance of understanding your data cannot be understated. Our intuition may make us think that we could not perform this operation when the length of both vectors are not the same. R does this operation still by re-writing `vec2` such that we have `vec2 <- c(1, 2, 3, 4, 5, 6, 1, 2, 3, 4)`. This is what we call recycling - the shorter vector is increased by repeating (AKA recycling) the values until it matches the length of the longer vector.
+
+When working with vectors we can use `any()` and `all()` to answer logical questions about elements. 
+
+```{r vec-logical}
+# are there any elements in the vector greater than 6? 
+any(vec3 > 6)
+
+# are all elements in the vector greater than 6?
+all(vec3 > 6)
+
+```
+
+To find out which elements satisfy the logical conditions, we can use the aptly named `which()` function. You can also index with logical statements 
+
+```{r vec-which}
+which(vec3 > 6)
+
+## same as logical statement indexing
+
+vec3[vec3 > 6]
+```
+
+There are various other functions you can run on vectors, including 
+
+* `mean() `finds the arithmetic mean of a vector
+* `median() `finds the median of a vector
+* `sd()` and `var()` finds the standard deviation and variance of a vector respectively
+* `min()` and `max()` finds the minimum and maximum of a vector respectively
+* `sort()` returns a vector that is sorted
+* `summary()` returns a 5 number summary of the numbers in a vector
+
+```{r vec-otherfunc}
+mean(vec3)
+
+median(vec3)
+
+sd(vec3)
+
+var(vec3)
+
+min(vec3)
+
+max(vec3)
+
+summary(vec3)
+
+```
+
+
+## 2. Arrays
+
+In R, arrays are data structures with 1 or more dimensions containing elements of the same data type.
+
+We can create an array with the `array()` function. 
+
+```{r array}
+ar1 <- array(1:24, dim = c(2, 3, 4))
+
+ar1
+```
+
+You can also create an array by providing a dimensions attribute to a vector. 
+
+```{r vec-array}
+vec <- rep(1:24)
+
+vec_array <- array(vec, dim = c(2, 3, 4))
+# creates a 2 x 3 x 4 array -- so 2 rows, 3 columns, and 4 in the 3rd dimension 
+
+vec_array
+```
+
+We can use the follow functions to describe our array data structure. 
+
+* `dim()` to get the dimensions 
+* `is.array()` to confirm it is an array structure 
+* `typeof()` to see the type of elements does our array contain 
+* `str()` to see the structure of the array 
+* `attributes()` to see other attributes
+
+```{r array-describe}
+dim(vec_array)
+
+is.vector(vec_array)
+
+is.array(vec_array)
+
+typeof(vec_array)
+
+str(vec_array)
+
+attributes(vec_array)
+```
+
+To slice arrays we can using the square brackets notation where you can specify each dimension separated by `,`. Just like vectors, we can replace values in an array by using indexing and assigning of values.
+
+```{r array-index}
+## return 2nd row, 2nd column of the 1st array 
+vec_array[2, 2, 1]
+
+## return row 2 of 4th array 
+vec_array[2, , 4]
+```
+
+What code would you write to access the number 2 in our `vec_array` object? 
+
+```{r vec-array-7}
+## what code would you use to access number 7?
+vec_array[1, 1, 2]
+```
+
+```{r array-replace}
+# replace value 10 with 100 
+## first look up index of 10 so [2, 2, 2]
+vec_array[2, 2, 2] <- 100
+
+vec_array
+```
+
+Similar to vectors, arithmetic operations between arrays are performed elementwise, with the recycling rule applying when the two arrays are of different dimensions. Let’s see the following example.
+
+```{r array-arithmetic}
+array_1 <- array(1:8, c(2, 2, 2))
+
+array_2 <- array(8:1, c(2, 2, 2))
+
+array_1 + array_2
+```
+
+```{r array-arithmetic-2}
+array_1 * array_2
+```
+
+```{r array-arithmetic-3}
+array_1 * 3
+```
+
+To apply a function on all elements of an array, you can directly use the function on the array object as if it is a vector. The result is equivalent to first converting the array into a vector using `as.vector()` and applying the function on the vector. In fact, the output is in the form of a vector. 
+
+```{r array-all-elements}
+sum(array_2)
+
+mean(array_2)
+
+quantile(array_2, c(0.25, 0.5, 0.75))
+```
+
+As arrays are multidimensional, you may now be thinking "okay, but what if I want to apply functions not on the whole array, but along certain dimension(s)?" Well, the `apply()` function comes in here. Note the arguments in this function are in all capital letters. 
+
+```{r array-apply}
+# calculate the mean along the first dim
+apply(array_1, MARGIN = 1, FUN = mean)
+
+# verify the first element
+mean(array_1[1, , ])
+
+# verify the second element
+mean(array_1[2, , ])
+
+# calculate the sum along the second dim
+apply(array_1, MARGIN = 2, FUN = sum)
+
+# calculate the sd along the third dim
+apply(array_1, MARGIN = 3, FUN = sd)
+```
+
+In the second argument of `apply()`, in addition to specifying one dimension, you can also supply a vector of dimensions that the function will be applied upon. For example, the following code computes the sum along the first two dimensions
+
+```{r array-sum-2d}
+apply(array_1, MARGIN = 1:2, FUN = sum) 
+```
+
+
+## 3. Lists 
+
+In R, a list is another flavor or type of vector which can have data elements of different types and are a step up in complexity from atomic vectors. 
+
+We have in fact already seen an R list output in the Week 3 Data Types R notebook - the output of `str_extract_all()` and `str_split()` is a list! In this case a list of characters as these functions work with strings.   
+
+```{r strextract-list}
+# familiar code from last week 
+string1 <- "Edinburgh is the capital of Scotland"
+
+str_extract_all(string1, pattern = "[aeiou]")
+
+str_split(string1, pattern = "[aeiou]|[AEIOU]")
+```
+
+The `typeof()` a list is list. You can test for a list with `is.list()`, and coerce to a list with `as.list()`.
+
+You can turn a list into an atomic vector with `unlist()`. However, as a note of caution, the rules for the resulting type are complex, not well documented, and not always equivalent to what you would get with `c()`.
+
+```{r list-create}
+# first lets create some vectors 
+n <- c(2, 3, 5) 
+s <- c("aa", "bb", "cc", "dd", "ee") 
+b <- c(TRUE, FALSE, TRUE, FALSE, FALSE) 
+
+# now lets combine those vectors into a list
+l1 <- list(n, s, b, 3)   
+# l1 contains copies of n, s,and b 
+  
+# confirm x is a list 
+is.list(l1)
+```
+
+```{r list-describe}
+print(l1)
+
+length(l1) # there are 4 objects in our list 
+```
+
+But notice, our list contains other lists as well as the value 3! 
+
+When accessing elements of a list in R, remember that `[[]]` are used to reference a list item directly while `[]` are used to slice a list. In other words, use `[[]]` to access any single element in the list and `[]` to access a list of selected elements. 
+
+```{r list-slice-index}
+# slice list at element 2 - returning a list
+slice <- l1[2]
+slice
+
+# slice list at elements 2 and 4
+slice2 <- l1[c(2,4)] 
+slice2
+
+# take out list item 2 as a character vector 
+index <- l1[[2]]
+index
+```
+
+Look at the objects in your global environment to confirm that `index` returned a character string, while `slice` and `slice2` returned list objects. 
+
+We can add new elements to a list using `append()` 
+
+```{r list-add}
+l2 <- l1 %>% 
+  append("R", after = 3)
+
+print(l2)
+```
+
+A list can also be concatenated to create bigger lists. Because a list can store any type of data, it can also contain nested lists (lists within lists within lists, etc)... you can see how this can get quite complicated very quickly! 
+
+```{r list-c}
+l3 <- list("apple", "banana", "orange")
+
+c_list <- c(l2, l3)
+
+c_list
+```
+
+
+## 4. Named lists 
+
+Named lists are a means of imitating a dictionary in Python, though with fewer functionalities and uses. Because a dictionary is a built-in data structure in Python, there are many instances where it can be used (such as in creating a `pandas` data frame by entering data). 
+
+Named lists in R map onto the key:value mapping in dictionaries with a name:value mapping. You can index a named list using the double square bracket notations. Watch out though as you can accidentally have duplicate names/keys! 
+
+
+```{r namedlist-1}
+
+dict <- list("city" = "edinburgh",
+             "university" = "UoE",
+             "year" = 1583)
+
+print(dict)
+
+typeof(dict)
+
+## to access an element in a list 
+dict[["year"]]
+
+## to access the 2nd name:value pair use single []
+dict[2]
+```
+
+We can add new data to our named list as follows 
+
+```{r namedlist-new}
+
+dict["campus"] <- "George Sqaure"
+
+print(dict)
+
+# return names of elements 
+names(dict)
+```
+
+
+To delete elements from a named list, we can use the `within()` function and `rm()` function.
+
+```{r namedlist-del}
+within(dict, rm(city))
+```
+
+
+
+## Data frames/Tibbles 
+
+In R, data frames are likely the data structure which you use the most. A data frame is a 2 dimensional structure (rows and columns) which can contain heterogeneous data typed elements. 
+
+A data frame has `rownames()` and `colnames()`. The `names()` of a data frame are the column names. A data frame has `nrow()` rows and `ncol()` columns. The `length()` of a data frame gives the number of columns.
+
+As mentioned in this week's content in topic 5, the `tidyverse` ecosystem uses `tibbles` in place of the base R `data.frame`. Tibbles have an enhanced print method, never coerce strings to factors, and provide stricter subsetting methods. Both data frames and tibbles are built on top of lists. 
+
+We will be working with tibbles in this course specifically. In the following section, I use data frame and tibble interchangeably as the discussed functions work the same with both data structures. 
+
+
+We will be using the gapminder data set, which is available in R in the `gapminder` package. We saw this dataset briefly in the Week 1 tutorial. Instead of reading in the data through the package, we will do so with the `read_csv()` function, which allows us to read in a local data file saved in CSV format. 
+
+```{r read-indata}
+gap_data <- read_csv("../data/gapminder_data_unfiltered.csv") 
+# be sure to modify the code above to fit your own folder structure/file path to where you put the data file 
+
+## notice that when we read in data with read_csv, we get a message with some information about how the data was parsed. There are 3313 rows and 6 columns, 2 of which were parsed as a character data type and 4 as a double
+
+# as I used the tidyverse read_csv function, our data is a tibble specifically 
+is_tibble(gap_data)
+```
+
+As we learned last week, we can get some descriptions of our data frame with `str()` and `glimpse()`. We can also use `summary()`. The choice of which data frame describing function to use is up to you, and really depends on the type of information you are after. To view the data we can use `View()` or click on the data object in the global environment pane, which will open a spread-sheet like data viewer. Try it now. 
+
+```{r df-describe}
+str(gap_data)
+
+glimpse(gap_data)
+
+summary(gap_data)
+```
+
+When slicing data frames in R, the square bracket notation works as follows:
+
+`data[ row , column ]`
+
+So if want to see the first 5 rows of `gap_data`, we could use the following code:
+
+```{r df-slice}
+# here we are calling only on the rows putting our indexing range to the left of the comma
+gap_data[1:5, ] 
+
+# only show row 7 
+gap_data[7, ]
+
+# If we put this indexing range to the right of the comma, we would be referring to columns instead
+
+gap_data[ , 1:5]
+```
+
+
+When working with data frames/tibbles in R, there are 5 key functions: `select()`, `filter()`, `group_by()`, `summarise()`, and `mutate()`. 
+
+To perform subgroup analysis, `group_by()` and `summarise()` are your best friends. The `group_by()` function tells R that you are about to perform subgroup analysis on your data. It retains information about your groupings and calculations are applied on each group separately. To go back to summarising the whole dataset again use `ungroup()`. In general, it is good practice to use `ungroup()` after grouping your data to avoid weird, funky and unexpected results. `summarise()` creates a new data frame with the summary statistics you input. This does not modify the input dataframe as it returns a new data frame entirely. When using `summarise()` you need to specify the new column name and then the desired function as so `summarise(new_colum = function(column), new_column = function(column))`.
+
+Useful functions within a `summarise()` call include: 
+
+* Center: `mean()`, `median()`
+* Spread: `sd()`, `IQR()`, `mad()`
+* Range: `min()`, `max()`
+* Position: `first()`, `last()`, `nth()`,
+* Count: `n()`, `n_distinct()`
+* Logical: `any()`, `all()`
+
+
+```{r group-by}
+# lets group our data by continent and get the mean population 
+
+gap_data %>% 
+  group_by(continent) %>% 
+  summarise(mean_pop = mean(pop)) 
+```
+
+`filter()` and `select()` allow you to susbset your data frame by rows or columns specifically. 
+
+* `filter()` keeps rows that match a condition
+* `select()` keep or drop columns using their names or types 
+
+Within `filter()` we can use the comparison and logical operators that we learned about in Week 2 & 3 Topic 2. Additionally, we can use the `%in%` operator to identify if a value or set of values appears within another set of values. The `%in%` operator in R is used to check if the values of the first argument are present in the second argument and returns a logical vector indicating if there is a match or not for its left operand. 
+
+```{r filter-select}
+# subset data to be only year and continent variables 
+gap_data %>% 
+  select(year, continent)
+
+# subset data to be only numeric variables 
+## to do so, I need to use one of the selection helper functions within where
+gap_data %>% 
+  select(where(is.numeric))
+
+# filter data to be only 1980 and before 
+gap_data %>%
+  filter(year >= 1980)
+
+# within filter we can also filter the data for specific countries 
+gap_data %>% 
+  filter(country %in% c("Thailand", "Peru"))
+```
+
+As a quick overview, I have included some selection features below that may be useful. This is by no means an exhaustive list.
+
+* `where()`: Applies a function to all variables and selects those for which the function returns TRUE.
+
+Tidyverse selections implement a dialect of R where operators make it easy to select variables:
+
+* `:` for selecting a range of consecutive variables.
+* `!` for taking the complement (or negative) of a set of variables.
+* `&` and `|` for selecting the intersection or the union of two sets of variables.
+* `c()` for combining selections.
+
+In addition, you can use selection helpers. Some helpers select specific columns:
+
+* `everything()`: Matches all variables.
+* `last_col()`: Select last variable, possibly with an offset.
+* `group_cols()`: Select all grouping columns.
+
+Other helpers select variables by matching patterns in their names:
+
+* `starts_with()`: Starts with a prefix.
+* `ends_with()`: Ends with a suffix.
+* `contains()`: Contains a literal string.
+
+When manipulating data frames in R, `mutate()` is one of the most important and commonly used functions. Like `summarise()`, `mutate()` respects groupings set by `group_by()`. `mutate()` allows us to change or add columns, following a similar syntax to `summarise()`, `mutate(new_colum = function(column), new_column = function(column))`. The similar syntax often results in these two functions being confused. Remember, `mutate()` to modify the data, `summarise()` to  condenses the data into a minimal table that only includes the variables specifically asked for. Note, you can overwrite existing columns, but in general this is not good practice.  
+
+```{r mutate}
+gap_data %>% 
+  mutate(mean_gdpPercap = mean(gdpPercap))
+
+# this created a new variable called mean_gdpPercap with the mean of the whole data set repeated on every row in the tibble 
+```
+
+```{r mutate-2}
+# to get the mean population across all years per country we just first need to do a group_by 
+
+gap_data %>% 
+  group_by(country) %>% 
+  mutate(mean_pop_country = mean(pop))
+
+# we can also use mutate to change the data type of columns
+## lets make year a factor 
+gap_data %>% 
+  mutate(year_f = as.factor(year))
+```
+
+### Missing values in data frames 
+
+To replace the NA values with the word missing in character variable, we can use `replace_na()` within a `mutate()` function. To exclude rows with NAs, we can use the not operator `!` in front of the `is.na()` function within a `filter()` function. 
+
+Lets create a tibble with some missing data to see how this works. 
+
+```{r create-df-missing}
+# first we will create some vectors then put them into a tibble 
+names <- c("Angela", "Shondra", NA, "Ben")
+age <- c(27, NA, 57, 44)
+result <- c(TRUE, FALSE, NA, TRUE)
+patients <- tibble(names, age, result)
+
+glimpse(patients)
+```
+
+```{r df-remove-missing}
+# remove the rows with missing values in age  
+patients %>% 
+  filter(!is.na(age))
+```
+
+To drop or remove rows from you data frame that contain missing values, you can use `drop_na()`. Another way to interpret drop_na() is that it only keeps the "complete" rows (where no rows contain missing values).
+
+```{r df-drop-na}
+patients %>% 
+  drop_na()
+
+# you can also specify a specific column 
+patients %>% 
+  drop_na(names)
+
+# to specify multiple columns, pass a vector to drop_na 
+patients %>% 
+  drop_na(c(names, age))
+
+# you can use any of the tidyselect helpers 
+patients %>% 
+  drop_na(last_col())
+```
+
+
+```{r df-replace-na}
+# rename NA as missing in names variable
+patients %>% 
+  mutate(names_miss = replace_na(names, "unknown")) 
+
+```
+
+**Note** data types matter here (as well as just generally speaking) in terms of what you can use as a valid input to `replace_na()`. If I try and replace the NA in the age column with "missing", I will get an error. 
+
+```{r df-remove-missing-2}
+# this produces an error 
+patients %>% 
+  mutate(age_miss = replace_na(age, "unknown")) 
+```
+
+The important pat of this error is here: "Can't convert `replace` <character> to match type of `data` <double>." Because age is a numeric variable, our input to replace needs to be of the same data type. 
+
+```{r df-remove-missing-3}
+patients %>% 
+  mutate(age_miss = replace_na(age, 999))
+```
+
+**Note** one of the few instances where overwriting a variable is not necessarily bad practice is when overwriting missing values. When working with big data sets, appending a new column can be unnecessarily costly in terms of memory space. 
+
+You can also use the `fill()` function from the `tidyr` package to fill missing values using the next (forward fill) or previous (back fill) valid entry.
+
+```{r missing-fill}
+# the default behavior is to fill from top to bottom (forward full)
+patients %>% 
+  fill(age) # default .direction = "down"
+
+# back fill 
+patients %>% 
+  fill(age, .direction = "up")
+
+# again here you can use tidyselect helper functions! 
+patients %>% 
+  fill(everything(), .direction = "down")
+```
+
+## You did it! 
+
+Well done for making it to the end of this notebook. If you have not done so yet, move to the Week 4 Python data structures notebook next. 
+
+Do not forget your 3 stars, a wish, and a step mini-diaries once you have completed the content for this week. 
+
+---
+*Dr. Brittany Blankinship (2024)* 
+
+ 
