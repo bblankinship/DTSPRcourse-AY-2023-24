@@ -68,7 +68,7 @@ There has been an IT failure in the prescribing databases in a local area. The o
 The code to load data object `x` has been provided below. 
 
 ```{r task2-data}
-# install.packages(rjson)
+# install.packages("rjson")
 # uncomment above if you have not installed the package before 
 
 library(rjson)
