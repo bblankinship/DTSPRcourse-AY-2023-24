@@ -1,0 +1,114 @@
+---
+title: "R code and report"
+author: "B123456 CHANGE TO YOUR EXAM NUMBER"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Task 1: R 
+
+In this task you are asked to investigate the data in `scot_unintentional_injuries.csv` and `healthboards.csv`. 
+
+The Unintentional Injuries dataset from Public Health Scotland provides information on emergency hospital admissions as a result of unintentional injuries and assaults. You can find more [information abou t the unintentional injuries data set here, including a data dictionary](https://www.opendata.nhs.scot/dataset/unintentional-injuries/resource/aee43295-2a13-48f6-bf05-92769ca7c6cf) and [here for more information about the health boards dataset](https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc). Do not import the data via the URL, you must use the data files provided for this assignment. 
+
+Follow the steps below to ultimately answer the final questions with the data. 
+
+* load the necessary libraries and packages
+* read in the data
+* join the two data sets together
+* check the data types of the variables of interest and ensure they are they type you want them to be. If not, change them.
+* check for the content/information contained within your variables of interest and ensure you are satisfied
+with the presentation
+* check for and deal with any missing data, if deemed appropriate
+* check the data formats (wide vs long) and transform if it is not appropriate
+
+*Question:* **Across Scotland, what are the most and least common unintentional injuries for young people aged 5-14 in 2013/14 and 2022/23 to be admitted to the emergency hospital for? Did the rate of these injuries change between time periods?**
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+**Task 1 (R) Answer** (in 1-2 sentences): 
+
+
+## Task 1 Report
+
+* word limit: 1100 words maximum including Task 2 report  
+* word count: **add here once you have completed this section**
+* Discuss your approach to solving this task in both languages (what you did and why you did it this way) and how your approach was similar or different between Python and R. 
+
+
+
+
+## Task 1 other data types or data structures 
+
+* word limit: 150 words maximum 
+* word count: **add here once you have completed this section**
+* Discuss 2 other data types or data structures (2 total) that you could have used in solving this task and why they would or would not be suitable. 
+
+
+
+
+# Task 2: R  
+
+There has been an IT failure in the prescribing databases in a local area. The only remaining data around medications is the backup file below, but it has been scrambled. Explore the following data object `x`. Select **7 of the 10** aspects of data and reconstruct the dataset about medications. Present `x` in a more clear and better structured format, ensuring that the data structure and data types are appropriate, given the (limited) information provided.
+
+The code to load data object `x` has been provided below. 
+
+```{r task2-data}
+# install.packages(rjson)
+# uncomment above if you have not installed the package before 
+
+library(rjson)
+
+x <- fromJSON(file= "../data/task2_data.json")
+```
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+## Task 2 report 
+
+* word limit: 1100 words maximum including Task 1 report  
+* word count: **add here once you have completed this section**
+* Discuss your approach to solving this task (what you did and why you did it this way) and how your approach was similar or different between Python and R. 
+
+
+
+
+## Task 2 other data types or data structures
+
+* word limit: 150 words maximum 
+* word count: **add here once you have completed this section**
+* Discuss 2 other data types or data structures (2 total) that you could have used in solving this task and why they would or would not be suitable. 
+
+
+
+
+# Reflective account 
+
+* word limit: 300 word maximum 
+* word count: **add here once you have completed this section**
+* Provide a brief reflective account on your learning journey throughout the course. Reflect on the skills you have developed, and areas that you have noticed that may need further development. The 3 stars and a wish mini-diaries you have been completing across the course can be super useful to you here. 
+
+
+
