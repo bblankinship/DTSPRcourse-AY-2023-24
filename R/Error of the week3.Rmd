@@ -1,0 +1,103 @@
+---
+title: "Error of the week - week 3"
+author: "tthejll"
+date: "2024-04-24"
+output: html_document
+---
+
+Setup the .Rmd File. 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries
+
+``` {r Load libraries}
+library(tidyverse)
+
+```
+
+# Error of the week, week 3
+Types, comparisons, and process of finding things out! 
+
+``` {r Compare numbers}
+a_vector <- c(1,2,3,4,5)
+
+
+max(a_vector) %>% print()
+```
+It gives us 5 as expected.
+
+
+``` {r Compare with one chr}
+b_vector <- c(1,2,3,"4",5)
+
+
+max(b_vector) %>% print()
+
+```
+It also gives us five, but it looks a little strange. It's looks like a `chr`.
+
+Let's check.
+
+``` {r check output type}
+
+max(b_vector) %>% typeof() %>% print()
+
+```
+It's indeed a character... hmmm strange..
+
+
+Let's try another.
+``` {r Compare with another 'chr'}
+c_vector <- c(1,2,3,"four",5)
+
+
+max(c_vector) %>% print()
+```
+Still returns a `chr`, but why `"four"` instead of one of the numbers.
+
+Let's see what each of element in the vectors are.
+
+
+``` {r check types}
+a_vector %>% typeof() %>% print()
+b_vector %>% typeof() %>% print()
+c_vector %>% typeof() %>% print()
+
+```
+
+The first is all numbers, but the latter two are `"characters"`.  In fact, if you put a `character` in an a vector of numbers they are all transformed into `characters` compared to python, where that is okay. 
+
+
+So why does `max(b_vector)` and `max(c_vector)` work?  Let's look at the help.
+
+``` {r look up help}
+
+?max
+
+```
+
+What does 'lexicographically', mean? https://www.ecosia.org/search?addon=firefox&addonversion=4.1.0&q=lexicographically
+
+
+Oh, I can actually use it on `character` because `<` work on them as well. Let's see!
+
+``` {r comparison of characters}
+"a" < "b"
+
+"b" < "a" 
+
+"c" == "c"
+
+```
+
+Let's see what happens if we try comparing a `chr` with and `num`
+
+``` {r compare num and chr}
+1 < "1"
+
+1 <= "1"
+
+1 == "1"
+```
