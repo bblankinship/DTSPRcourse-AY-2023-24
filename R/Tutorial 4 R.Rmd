@@ -1,0 +1,189 @@
+---
+title: "Tutorial 4 R Notebook"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial there are tasks for working with vectors, lists, and data frames.
+
+* Vectors = Tasks 1-8 
+* Lists = Tasks 9-10 
+* Tibbles/Data frames = Tasks 11-16 
+
+The aim of this tutorial notebook is to give you some (guided) hands-on experience working with different data structures in R.
+
+```{r libraries, message = FALSE, echo = FALSE}
+# it is always good practice to load the packages needed for the document at the top
+
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+
+## Vectors 
+
+### Tasks 1 - 8
+Answer the following questions as it relates to vector `x`. 
+
+1. What is the length of x?
+
+2. What is the data type contained by the vector x? 
+
+3. How many values in vector x are 50 or below? Which values are they?
+
+4. How many values in vector x are above 35? Which values are they?
+
+5. How many values in vector x are below 40 or above 80? Which values are they? 
+
+6. What is the mean of vector x?
+
+7. Sort the vector x in ascending order 
+
+8. Merge vector x with the vector y. Before running the code, What do you expect the resulting data type of the vector to be and why?   
+
+```{r vector}
+x <- c(3, 67, 89.4, 50, 111, 45, 2, 6,8, 45,
+       32, 444, 65, 47, 8, 90, 2, 95, 21, 1)
+
+y <- c("Edinburgh", "Glasgow", "Stirling")
+```
+
+```{r}
+## your answer 
+
+
+```
+
+
+## Lists 
+
+### Task 9 
+
+Create a list containing strings, numbers, vectors and logical values. 
+
+```{r}
+## your answer 
+
+
+```
+
+
+### Task 10 
+
+Create a named list comprised of colors blue, red, green; animals dog, cat, horse; and age 33, 56, 24. Add a new name value pair to the list  flower comprised of daisy, rose, and lily.Then convert this named list to a tibble. 
+
+**Hint** Do not forget that there is a difference between `[]` and `[[ ]]`
+
+```{r}
+## your answer 
+
+
+```
+
+
+## Data frames/tibbles
+
+For this series of tasks we will be using a publicly available dataset from [Public Health Scotland around Stroke Activity](https://www.opendata.nhs.scot/dataset/scottish-stroke-statistics/resource/47656572-e196-40c8-83e8-08b0b223b2e6). This dataset provides "Information on hospital activity related to cerebrovascular disease (including stroke and subarachnoid haemorrhage)." Look through the link and read the data dictionary at the bottom to familiarise yourself with the variables.  
+
+We will first read in the data. You can read in data from a URL with the `read_csv()` function but inputting the URL as a character string - how helpful! From the link above to the data set there is a URL I have copied at the top of the page. It is good practice when first reading in a data set to name it and add `_raw` or some delineation that it is the raw data. As you process the data for your analytic purposes, you can then save the data in an object without this delineation. This allows you to maintain an object with a version of the raw data that you can refer to later if needed. 
+
+```{r import-data}
+stroke_raw <- read_csv("https://www.opendata.nhs.scot/dataset/f5dcf382-e6ca-49f6-b807-4f9cc29555bc/resource/47656572-e196-40c8-83e8-08b0b223b2e6/download/stroke_activitybyhbr.csv")
+```
+
+### Task 11 
+
+Look through the imported data to check it looks as it should based on the data dictionary. Are all the expected variables included? What dimensions does the dataframe have? Do the data types of these variables look to be correct? 
+
+*A useful new function* There is a useful function called `head()` which will print by default the first 5 rows of a dataframe. The counterpart is `tail()` which print the last 5 rows by default. Both functions take the argument `n = ` if you wish to specify a different number of rows other than 5. There are counterpart functions in Python with the same name and functionality!
+    
+This will help in solving the task, but you will need to use some other summary/description functions as well.
+
+```{r}
+## your answer here 
+
+
+```
+
+
+### Task 12 
+
+We do not need all of the columns in the dataset. The only variables we need for the next tasks are `FinancialYear`, `AdmissionType`, `AgeGroup`, `Diagnosis`, and `NumberOfDischarges`. Within the `HBR` variable, "S92000003" is the country code for Scotland. The `Sex` variable we do not need for this task, but it too includes an aggregate level "All". Filter the data such that only these aggregate level are included for these 2 variables. Filter the data accordingly and save this processed dataset into an object called `stroke`.
+
+
+**Hint** the object `stroke` should contain 960 rows and 5 columns 
+
+```{r}
+## your answer 
+
+
+```
+
+### Task 13 
+
+Check the data types of the remaining 5 variables and convert them to a better data type if needed. 
+
+```{r}
+### your answer 
+
+
+```
+
+
+### Task 14 
+
+Look at the levels within the factors - is there anything unexpected?
+
+*Hint* Using `select()` here will not work as expected. This is due to the data structure resulting from the `select()` function - a tibble! If you want to pass via the pipe `%>%` to a function which requires a vector input, you will instead want to use the function `pull()` from `dpylr`. 
+
+```{r}
+## your answer 
+
+
+```
+
+
+### Task 15 
+
+`AgeGroup` is a bit messy. It should be ordered and includes 2 aggregate levels. Remove the aggregate levels and order the remaining factor levels.
+
+**Hint** your `stroke` tibble should contain 640 rows and 5 columns 
+
+```{r}
+## your answer
+
+
+```
+
+
+### Task 16 
+
+Create a summary table with the average number of discharges with a stroke diagnosis by age group for all admissions in the financial years 2021/22 and 2022/23.
+
+**Hint 1** the function `summarise()` would be useful here 
+
+**Hint 2** further filtering of the data is needed for this task 
+
+```{r}
+## your answer 
+
+
+```
+
+
+---
+
+Well done! You have completed all of the tasks for the RMarkdown notebook for this tutorial. If you have not done so yet, now move to the Python notebook.
+
+Do not forget your 3 stars, a wish, and a step mini-diaries for this week once you have completed the tutorial notebooks and content for the week. 
+
+---
+*Dr Brittany Blankinship (2024)* 
+
+
