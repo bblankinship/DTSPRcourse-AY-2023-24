@@ -1,0 +1,388 @@
+---
+title: "Tutorial 4 R Notebook SOLUTIONS"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial there are tasks for working with vectors, lists, and data frames. 
+
+* Vectors = Tasks 1-8 
+* Lists = Tasks 9-10 
+* Tibbles/Data frames = Tasks 11-16 
+
+The aim of this tutorial notebook is to give you some (guided) hands-on experience working with different data structures in R.
+
+```{r libraries, message = FALSE, echo = FALSE}
+# it is always good practice to load the packages needed for the document at the top
+
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+
+## Vectors 
+
+### Tasks 1 - 8
+Answer the following questions as it relates to vector `x`. 
+
+1. What is the length of x?
+
+2. What is the data type contained by the vector x? 
+
+3. How many values in vector x are 50 or below? Which values are they?
+
+4. How many values in vector x are above 35? Which values are they?
+
+5. How many values in vector x are below 40 or above 80? Which values are they? 
+
+6. What is the mean of vector x?
+
+7. Sort the vector x in ascending order 
+
+8. Merge vector x with the vector y. Before running the code, What do you expect the resulting data type of the vector to be and why?   
+
+```{r vector}
+x <- c(3, 67, 89.4, 50, 111, 45, 2, 6,8, 45,
+       32, 444, 65, 47, 8, 90, 2, 95, 21, 1)
+
+y <- c("Edinburgh", "Glasgow", "Stirling")
+```
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 1-8 solutions 
+
+```{r task-1}
+length(x)
+
+# or you could also look in your global environment and see num [1:2]
+```
+
+```{r task-2}
+typeof(x)
+
+```
+
+```{r task-3}
+x[x <= 50] 
+x[x <= 50] %>% length()
+
+## or to get the index of the values 
+
+which(x <= 50)
+```
+
+```{r task-4}
+x[x > 35]
+x[x > 35] %>% length()
+
+```
+
+```{r task-5}
+x[x < 40 | x > 80]
+x[x < 40 | x > 80] %>% length()
+```
+
+```{r task-6}
+mean(x)
+
+## or for mean plus other info 
+summary(x)
+```
+
+```{r task-7}
+sort(x)
+
+```
+
+```{r task-8}
+z <- c(x, y)
+z
+```
+
+The resulting vector is a character because vectors can only contain 1 data type. As y is a character, x has been converted to a character as well (as denoted by the quotation marks around the numbers). 
+
+## Lists 
+
+### Task 9 
+
+Create a list containing strings, numbers, vectors and logical values. 
+
+```{r}
+### your answer 
+
+
+```
+
+
+#### Task 9 solution
+
+There are endless potential solutions, the primary point is to emphasize that lists can contain multiple data types and to check your understanding of what these data types are by name. 
+
+```{r task-9}
+list_data <- list("orange", "apple", 
+                  c(5, 7, 9, 11), TRUE, 125.17, 75.83)
+
+list_data
+
+```
+
+### Task 10 
+
+Create a named list comprised of colors blue, red, green; animals dog, cat, horse; and age 33, 56, 24. Add a new name value pair to the list  flower comprised of daisy, rose, and lily.Then convert this named list to a tibble. 
+
+**Hint** Do not forget that there is a difference between `[]` and `[[ ]]`
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 10 Solution 
+
+```{r task-10}
+# create list 
+named_list <- list(colors = c("blue", "red", "green"),
+                   animals = c("dog", "cat", "horse"),
+                   age = c(33, 56, 24))
+
+named_list
+
+# add new name value pair 
+named_list[["flower"]] <- c("daisy", "rose", "lily")
+
+## or
+named_list[["flower"]] <- c(named_list[["flower"]], c("daisy", "rose", "lily"))
+
+# check this has worked as expected
+named_list
+
+
+# convert to tibble 
+named_list_df <- as_tibble(named_list)
+
+named_list_df
+```
+
+
+## Data frames/tibbles
+
+For this series of tasks we will be using a publicly available dataset from [Public Health Scotland around Stroke Activity](https://www.opendata.nhs.scot/dataset/scottish-stroke-statistics/resource/47656572-e196-40c8-83e8-08b0b223b2e6). This dataset provides "Information on hospital activity related to cerebrovascular disease (including stroke and subarachnoid haemorrhage)." Look through the link and read the data dictionary at the bottom to familiarise yourself with the variables.  
+
+We will first read in the data. You can read in data from a URL with the `read_csv()` function but inputting the URL as a character string - how helpful! From the link above to the data set there is a URL I have copied at the top of the page. It is good practice when first reading in a data set to name it and add `_raw` or some delineation that it is the raw data. As you process the data for your analytic purposes, you can then save the data in an object without this delineation. This allows you to maintain an object with a version of the raw data that you can refer to later if needed. 
+
+```{r import-data}
+stroke_raw <- read_csv("https://www.opendata.nhs.scot/dataset/f5dcf382-e6ca-49f6-b807-4f9cc29555bc/resource/47656572-e196-40c8-83e8-08b0b223b2e6/download/stroke_activitybyhbr.csv")
+```
+
+### Task 11 
+
+Look through the imported data to check it looks as it should based on the data dictionary. Are all the expected variables included? What dimensions does the dataframe have? Do the data types of these variables look to be correct? 
+
+*A useful new function* There is a useful function called `head()` which will print by default the first 5 rows of a dataframe. The counterpart is `tail()` which print the last 5 rows by default. Both functions take the argument `n = ` if you wish to specify a different number of rows other than 5. There are counterpart functions in Python with the same name and functionality!
+    
+This will help in solving the task, but you will need to use some other summary/description functions as well.
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 11 Solution 
+
+```{r task-11}
+str(stroke_raw)
+
+glimpse(stroke_raw)
+
+dim(stroke_raw)
+
+head(stroke_raw)
+
+tail(stroke_raw, n = 6)
+```
+
+There are 15 variables in our dataset, as expected, and 43200 observations. Of these variables, there are 12 which are characters and may be better suited as factors. 
+
+### Task 12 
+
+We do not need all of the columns in the dataset. The only variables we need for the next tasks are `FinancialYear`, `AdmissionType`, `AgeGroup`, `Diagnosis`, and `NumberOfDischarges`. Within the `HBR` variable, "S92000003" is the country code for Scotland. The `Sex` variable we do not need for this task, but it too includes an aggregate level "All". Filter the data such that only these aggregate level are included for these 2 variables. Filter the data accordingly and save this processed dataset into an object called `stroke`.
+
+
+**Hint** the object `stroke` should contain 960 rows and 5 columns 
+
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 12 Solution 
+
+```{r task-12}
+stroke <- stroke_raw %>% 
+# the filter function must come first as after select, the HBR and Sex variables do not exist anymore. Try to run the code with the select function first and see what happens
+  filter(HBR == "S92000003",
+         Sex == "All") %>% 
+  select(FinancialYear, AdmissionType, AgeGroup,
+         Diagnosis, NumberOfDischarges)
+
+stroke
+```
+
+### Task 13 
+
+Check the data types of the remaining 5 variables and convert them to a better data type if needed. 
+
+```{r}
+### your answer 
+
+
+```
+
+#### Task 13 Solution 
+
+```{r task-13}
+glimpse(stroke) 
+
+stroke <- stroke %>% 
+  mutate(FinancialYear = as.factor(FinancialYear),
+         AdmissionType = as.factor(AdmissionType),
+         AgeGroup = as.factor(AgeGroup),
+         Diagnosis = as.factor(Diagnosis))
+
+## a more advanced and elegant solution is to using the across and where functions to coerce all characters to be factors since all of the variables we wanted to change were characters 
+stroke %>% 
+  mutate(across(where(is.character), as.factor))
+```
+
+
+### Task 14 
+
+Look at the levels within the factors - is there anything unexpected?
+
+*Hint* Using `select()` here will not work as expected. This is due to the data structure resulting from the `select()` function - a tibble! If you want to pass via the pipe `%>%` to a function which requires a vector input, you will instead want to use the function `pull()` from `dpylr`. 
+
+```{r}
+## your answer 
+
+
+```
+
+
+#### Task 14 Solution
+
+```{r task-14}
+stroke %>% 
+  pull(FinancialYear) %>%
+  levels()
+
+# as mentioned above, notice that using select gives us NULL, which remember is a reserved word in R representing an undefined value 
+
+stroke %>% 
+  select(FinancialYear) %>% 
+  levels()
+
+stroke %>% 
+  pull(AdmissionType) %>% 
+  levels()
+
+stroke %>% 
+  pull(AgeGroup) %>% 
+  levels()
+
+stroke %>% 
+  pull(Diagnosis) %>% 
+  levels()
+  
+## when you have the correct data types in place (meaning characters are factors when you want them to be), the summary function will provide the factor levels and observations per level! Using data types to our advantage! 
+
+stroke %>% 
+  summary()
+```
+
+
+It looks like some of our variables include aggregate level responses! Good thing we checked our data. Aggregate data is very common in health and social care data. It is crucial to check your data to ensure you are aware of any aggregate categories. Depending on your specific use case, you may wish to use only the aggregate levels or perhaps remove the aggregate levels and only work with the finer-grained categories.
+
+`AdmissionType` includes 3 unique levels as well as an aggregate "All" level. 
+
+`AgeGroup` includes 2 aggregate levels: "All" and "Under75 years" and should be ordered. 
+
+`Diagnosis` does not have any aggregate levels. 
+
+### Task 15 
+
+`AgeGroup` is a bit messy. It should be ordered and includes 2 aggregate levels. Remove the aggregate levels and order the remaining factor levels.
+
+**Hint** your `stroke` tibble should contain 640 rows and 5 columns 
+
+```{r}
+## your answer
+
+
+```
+
+#### Task 15 Solution 
+
+```{r task-5}
+stroke <- stroke %>% 
+  # first filter to out aggregate levels 
+  ## here ! means NOT so it is doing the opposite, meaning keeping only the rows that are NOT all or under75 years 
+  filter(!AgeGroup %in% c("All", "under75 years")) %>% 
+  mutate(AgeGroup = as.ordered(AgeGroup))
+
+stroke # we can see now that AgeGroup is <ord> for ordered factor 
+```
+
+
+### Task 16 
+
+Create a summary table with the average number of discharges with a stroke diagnosis by age group for all admissions in the financial years 2021/22 and 2022/23.
+
+**Hint 1** the function `summarise()` would be useful here 
+
+**Hint 2** further filtering of the data is needed for this task 
+
+**Hint 3** Would it help of the data were grouped? 
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 16 Solution 
+
+```{r task-16}
+stroke %>% 
+  filter(AdmissionType == "All", 
+         Diagnosis == "Stroke",
+         FinancialYear %in% c("2021/22", "2022/23")) %>%
+  # change the order of the group by variables to see how the output changes 
+  group_by(FinancialYear, AgeGroup) %>% 
+  summarise(mean_discharge  = mean(NumberOfDischarges))
+```
+
+---
+
+Well done! You have completed all of the tasks for the RMarkdown notebook for this tutorial. If you have not done so yet, now move to the Python notebook.
+
+Do not forget your 3 stars, a wish, and a step mini-diaries for this week once you have completed the tutorial notebooks and content for the week. 
+
+---
+*Dr Brittany Blankinship (2024)* 
+
+
