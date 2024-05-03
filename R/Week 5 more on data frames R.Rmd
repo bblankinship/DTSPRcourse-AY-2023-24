@@ -1,0 +1,290 @@
+---
+title: "More on data frames in R"
+output: html_document
+date: "Week 5"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Working with data frames continued 
+
+Two very important concepts introduced this week around working with data frames are joins and reshaping your data structure. In this notebook we will look at some worked examples of both of these concepts in R. 
+
+```{r libraries, message = FALSE, warning = FALSE}
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+
+## Joins 
+
+First let's create some data frames
+
+```{r pdetails}
+# create a new dataframe called patient_details 
+
+patient_details <- tibble(id = c(1, 2, 3, 4, 5),
+                          age = c(40, 56, 23, 45, 34))
+
+patient_details
+```
+
+```{r apptdetails}
+# create a new data frame called appointment details 
+## notice only IDs 3, 4, and 5 exist in both data sets 
+
+appt_details <- tibble(id = c(3, 4, 5, 6, 7),
+                       month = c("March", "May", "June", "June", "April"),
+                       return_visit = c(TRUE, FALSE, TRUE, TRUE, FALSE))
+
+appt_details
+```
+
+Now lets join these two data sets together to create a data set for analysis. 
+
+### Inner join 
+
+```{r inner-join-ex}
+# inner join 
+
+inner_join(patient_details,
+           appt_details)
+
+## if you do not specify the "by" parameter, R will give us a message of which columns it used 
+```
+
+```{r inner-join}
+# it is good coding practice to be explicit and include the "by" argument 
+
+analysis_inner <- inner_join(patient_details,
+                             appt_details, 
+                             by = "id")
+
+analysis_inner
+```
+
+With the `tidyverse` syntax using the pipe `%>%` we could also take a tibble first and then pipe it to the join function. This tibble will then be used as the argument for the first parameter. This can be useful when including a join in a tidy data flow and then piping to some other functions such as `select()` or `filter()`.
+
+```{r inner-join2}
+patient_details %>% 
+  inner_join(appt_details, by = "id")
+```
+
+After an inner join, only IDs `3`, `4`, and `5` are returned as they are the only matching rows in both data frames. 
+
+### Full join 
+
+```{r full-join}
+# full join 
+
+analysis_full <- patient_details %>% 
+  full_join(appt_details, by = "id")
+
+analysis_full
+```
+
+In a full join, as you can see, there are `NA` values for IDs `1` and `2` in the `month` and `return_visit` columns as these IDs are not in the `appt_details` tibble. And there are `NA` values for IDs `6` and `7` for in the `age` column as these IDs are not in the `patient_details` tibble.
+
+### Left join 
+
+```{r left-join}
+analysis_left <- patient_details %>% 
+  left_join(appt_details, by = "id")
+
+analysis_left
+```
+
+In a left join, all of the data from `patient_details` was kept, resulting in `NA` values for IDs `1` and `2` in the columns `month` and `return_visit` as these IDs are not in the `appt_details` tibble. 
+
+### Right join 
+
+```{r right-join}
+analysis_right <- patient_details %>%
+  right_join(appt_details, by = "id")
+
+analysis_right
+```
+
+A right join is essentially the opposite of a left join, keeping all of the data from `appt_details`. Thus, IDs `6` and `7` have `NA` for `age` as these IDs are not in the `patient_details` tibble.
+
+If you switch which tibbles are on the right and left, a right join and left join will produce the same result, just with columns in a different order. 
+
+```{r right-left-ex}
+# left join with order of data frame inputs switched is the same as the right join above 
+
+analysis_left_switch <- appt_details %>% 
+  left_join(patient_details, by = "id")
+
+analysis_left_switch # which is the same as analysis_right only age is the last column rather than the 2nd 
+
+```
+
+### But what about when the linkage keys are not called the same thing? 
+
+In this case, we just need to specify using the `by` parameter which column name in tibble1 is equal to in tibble2. The name of the linkage key column in the first input data frame is what will be kept in the resulting data frame. If you want to keep both linkage key columns in the resulting data frame, you need to specify the argument `keep = TRUE`.
+
+If there are multiple linkage key columns, you just need to specify this as a vector passed to the `by` argument. So for example: 
+
+`tibble1 %>% left_join(tibble2, by = c("x1" = "x2", "y1" = "y2"))`
+
+```{r joinwdifflinkkeys}
+patient_details2 %>% 
+  full_join(appt_details, by = c("patient" = "id"))
+
+```
+
+
+```{r apptdetails-remind}
+# reminder of what the columns are called in appt_details 
+
+appt_details
+
+```
+
+```{r pdetails-2}
+# create a 2nd patient details tibble with a different name for the id variable 
+
+patient_details2 <- tibble(patient = c(1, 2, 3, 4, 5),
+                           age = c(40, 56, 23, 45, 34))
+
+patient_details2
+```
+
+```{r full-join-2}
+analysis_full2 <- patient_details2 %>% 
+  full_join(appt_details, by = c("patient" = "id"))
+
+analysis_full2
+
+# same as analysis full only the ID column is called patient as that is what it is called in patient_details2 which is the first input tibble 
+analysis_full
+```
+
+
+```{r full-join-3}
+# to keep linkage keys from both inputs we need keep = TRUE 
+
+patient_details2 %>% 
+  full_join(appt_details, by = c("patient" = "id"), keep = TRUE)
+
+```
+
+**NOTE** In `dplyr` version 1.1.0 and newer the syntax is slightly different using the explicit `join_by()`. function, which uses the logical comparison operator of equivalence `==`. Noteable currently uses `dplyr` 1.0.10 meaning the `by` argument is sufficient. To read more about the new `join_by()` syntax you can read [this blogpost on the Tidyverse website](https://www.tidyverse.org/blog/2023/01/dplyr-1-1-0-joins/)
+
+The code shared above would instead work as follows: 
+
+`tibble1 %>% left_join(tibble2, by = join_by(x1 == x2, y1 == y2))`
+
+```{r joinby}
+# this will result in an error if you run on Noteable as the join_by function does not exist in dplyr 1.0.10 
+patient_details2 %>% 
+  full_join(appt_details, by = join_by(patient == id))
+```
+
+Let's take a moment to interpret this error though: 
+> Error in join_by(patient == id) : could not find function "join_by" 
+
+The first part of the error message tells us where it can be found in the code. But the key element of to understanding the potential cause of the error is that the `join_by` function could not be found, this would be for a variety of reasons including 
+
+- a typo on the function name 
+- not first loading the package in which the function is found 
+- the function not existing -- which is the case here as it does not exist until the 1.1.0 version of the `dplyr` package 
+
+## Reshaping data 
+
+To reshape data in R we use the `pivot_longer()` and `pivot_wider()` functions from the `tidyr` package, which is loaded when we call the `tidyverse`. 
+
+There are multiple parameters these functions can take for more advanced and complicated pivoting (see the function documentation for more details), but the required parameters are: 
+
+* `pivot_longer()`
+  - `data` = data you want to pivot
+  - `names_to` = name of the column you want to create to capture the information stored in the column names of the wide data, requires a character string
+  - `values_to` = name of column you want to contain data values, requires a character string
+  - `cols` = range of columns that you have and want to pivot longer, or that you do not want to pivot (in which case use `-` in front of the column name) 
+  
+* `pivot_wider()`
+  - `data` = data you want to pivot
+  - `id_cols` = columns not to be included in the pivot, can take tidyselect helper functions  
+  - `names_from` = name of column you want
+to end up in several columns
+  - `values_from` = name of column that
+currently contains data values
+
+*Note* `pivot_longer()` parameters require inputs as character strings (in `" "`) as you are creating new columns and rows, whereas `pivot_wider()` does not as you are taking existing column names within the passed data frame 
+
+To strengthen our understanding of wide and long formats of data, we will again return the `gapminder` data that we have seen a few times before.
+
+```{r load-data}
+# remember to change the file path to the data to suit your own set up 
+gap_data <- read_csv("../data/gapminder_data.csv")
+
+gap_data
+```
+
+
+Sometimes, as with the gapminder dataset, we have multiple types of observed data. It is somewhere in between the purely long and wide data formats:
+
+* 3 "ID variables": `continent`, `country`, `year`
+* 3 "observation variables": `pop` `lifeExp`, `gdpPercap`
+
+It is  pretty common to have data in this format in most cases despite not having ALL observations in 1 column, since all 3 observation variables have different units. Depending on your question being asked of the data, this can be (and often is) considered a tidy format. But we can play with switching it to purely long and wide formats to show what that means (i.e. long would be 4 ID variables and 1 observation variable).
+
+```{r long-data}
+gap_data_long <- gap_data %>% 
+  pivot_longer(names_to = "metric", 
+               values_to = "value", 
+               cols = c(lifeExp, pop, gdpPercap))
+
+# The data argument is not required because we use the %>% operator so we pass the gap_data dataframe to the pivot_longer() function
+
+gap_data_long 
+```
+
+Using our new `gap_data_long` tibble, we can convert it back to the original `gap_data` format 
+
+```{r wide-data}
+gap_data_wide <- gap_data_long %>% 
+  pivot_wider(id_cols = c(country, continent, year),
+              names_from = metric,
+              values_from = value)
+
+gap_data_wide
+```
+
+We could also make the data even wider by passing multiple columns to the `values_from` parameter. Notice that when doing do the column names update accordingly 
+
+```{r wider-data}
+gap_data_wide2 <- gap_data %>% 
+  pivot_wider(id_cols = c(country, continent),
+              names_from = year,
+              values_from = c(lifeExp, pop, gdpPercap))
+
+gap_data_wide2
+```
+
+Let's compare the dimensions of our tibbles: 
+
+```{r df-dims}
+dim(gap_data) # 1704 rows and 6 columns 
+
+dim(gap_data_long) # 5112 rows by 5 columns 
+
+dim(gap_data_wide) # 1704 rows by 6 columns - same as gap_data as expected
+
+dim(gap_data_wide2) # 142 rows by 38 columns 
+```
+
+As we can see by the dimensions, `gap_data_long` is indeed skinnier (fewer columns) and longer (many more rows) than the other tibbles and `gap_data_wide2` is indeed much wider (many more columns and fewer rows)
+
+## You did it! 
+
+Well done for making it to the end of this notebook. If you have not done so yet, move to the Python notebook next. 
+
+Do not forget your 3 stars, a wish, and a step mini-diaries once you have completed the content for this week. 
+
+---
+*Dr Brittany Blankinship (2024)*
