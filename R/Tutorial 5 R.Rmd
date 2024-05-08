@@ -1,0 +1,158 @@
+---
+title: "Tutorial 5 R"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial we will return to the [Public Health Scotland around Stroke Activity](https://www.opendata.nhs.scot/dataset/scottish-stroke-statistics/resource/47656572-e196-40c8-83e8-08b0b223b2e6) dataset that we used in last week's tutorial. We will also be using the [Health Board Labels](https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc) dataset. 
+
+The aim of this tutorial is to give you some (guided) hands-on experience joining and reshaping tibbles, as well as to reinforce some of the learning we have done across the course. There are 8 tasks. 
+
+
+```{r library, message = FALSE, warning = FALSE}
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+```{r load-data}
+## read in the data sets 
+
+stroke_raw <- read_csv("https://www.opendata.nhs.scot/dataset/f5dcf382-e6ca-49f6-b807-4f9cc29555bc/resource/47656572-e196-40c8-83e8-08b0b223b2e6/download/stroke_activitybyhbr.csv")
+
+hb <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv")
+```
+
+It is always a good idea to quickly double check your data has been read in as expected. Since our data objects are tibbles (due to using `read_csv()`), there is a nice output in our RMD file that we can view by just calling the data object.
+
+```{r view-data-1}
+stroke_raw
+
+```
+
+```{r view-data-2}
+hb
+
+```
+
+Below is an image showing where the different Health Boards are in Scotland on a map.
+[Scotland HB Map](../figures/Map_of_Health_Boards.png)
+
+## Question to solve 
+
+The question we are trying to answer with the data is: 
+
+> What is the average number of discharges with a stroke diagnosis by age group in the East region of Scotland for all admissions in the finanical year 2019/20 and 2020/21?
+
+
+### Task 1
+
+Looking at these two tibbles, what columns do you think are the linkage keys? 
+
+```{r}
+## your answer 
+
+
+```
+
+
+### Task 2 
+
+Join the Stroke activity data set with the [Health Board Labels](https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc) dataset into a new tibble called `stroke_join`. 
+
+In Task 1 above we identified the linkage key variable(s), which is the first step when wanting to complete a join. Next, you need to decide on the type of join you want to use and then implement this in code.
+
+```{r}
+## your answer 
+
+```
+
+
+### Task 3
+
+To answer our question outlined above, we do not need all of the columns currently in the `stroke_join` data set. Process the data to include only the variables needed to answer the question and save this processed data set into an object called `stroke`.
+
+Check the data types of the remaining columns and change them if not appropriate. 
+
+**Hint** Beware of aggregate or summary level data, even in variables not needed to directly answer the question. Consulting the data dictionary (if provided) or doing data checks is crucial at this stage. 
+
+```{r}
+## your answer 
+
+
+```
+
+
+### Task 4
+
+What is the shape of the `stroke` data currently? Is it in a suitable shape?
+
+```{r}
+## your answer 
+
+
+```
+
+
+### Task 5 
+
+Now that we have our joined data set, it is important to inspect the data for any missing or aggregate values. We know from last week that this data set has many aggregate level responses! Check for the unique values of all 7 variables in `stroke`. Are there any unexpected findings? 
+
+```{r}
+## your answer 
+
+```
+
+
+### Task 6
+
+We now know there are both aggregate level responses in our tibble as well as missing data. Before we deal with any missing data unnecessarily, let's filter out the responses we are not interested in (i.e., remove the rows we do not need to answer the question) and then check again for any missing data. It is likely that in doing so, the missing data may not be a problem anymore. 
+
+Save your filtered data into a tibble called `stroke_q`
+
+**Hint** First write down what responses you want to keep for each variable in order to answer the question. Then write the code to do so. 
+
+```{r}
+## your answer 
+
+```
+
+
+### Task 7 
+
+Now that we have our data prepared and check, answer the question posed at the the start of this notebook:
+
+> What is the average number of discharges with a stroke diagnosis by age group in the East region of Scotland for all admissions in the finanical year 2019/20 and 2020/21?
+
+
+```{r}
+## your answer 
+
+```
+
+### Task 8 
+
+As I mentioned in this week's content, wide data is often more human readable than long data. Take your solution to Task 7 and make the presentation a nicer by reshaping the data a bit! 
+
+**Hint** using the pipe `%>%` you can pass your solution above to the pivot function of your choice 
+
+```{r}
+## your answer 
+
+```
+ 
+
+---
+
+Well done! You have completed all of the tasks for the RMarkdown notebook for this tutorial. If you have not done so yet, now move to the Python notebook.
+
+Do not forget your 3 stars, a wish, and a step mini-diaries for this week once you have completed the tutorial notebooks and content for the week. 
+
+---
+*Dr Brittany Blankinship (2024)* 
+
