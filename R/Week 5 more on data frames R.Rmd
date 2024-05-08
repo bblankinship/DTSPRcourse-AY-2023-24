@@ -131,12 +131,14 @@ If there are multiple linkage key columns, you just need to specify this as a ve
 
 `tibble1 %>% left_join(tibble2, by = c("x1" = "x2", "y1" = "y2"))`
 
-```{r joinwdifflinkkeys}
-patient_details2 %>% 
-  full_join(appt_details, by = c("patient" = "id"))
+```{r pdetails-2}
+# create a 2nd patient details tibble with a different name for the id variable 
 
+patient_details2 <- tibble(patient = c(1, 2, 3, 4, 5),
+                           age = c(40, 56, 23, 45, 34))
+
+patient_details2
 ```
-
 
 ```{r apptdetails-remind}
 # reminder of what the columns are called in appt_details 
@@ -145,13 +147,10 @@ appt_details
 
 ```
 
-```{r pdetails-2}
-# create a 2nd patient details tibble with a different name for the id variable 
+```{r joinwdifflinkkeys}
+patient_details2 %>% 
+  full_join(appt_details, by = c("patient" = "id"))
 
-patient_details2 <- tibble(patient = c(1, 2, 3, 4, 5),
-                           age = c(40, 56, 23, 45, 34))
-
-patient_details2
 ```
 
 ```{r full-join-2}
