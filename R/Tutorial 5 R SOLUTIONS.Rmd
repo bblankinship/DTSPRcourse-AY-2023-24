@@ -1,0 +1,338 @@
+---
+title: "Tutorial 5 R"
+output: html_document
+date: "`r Sys.Date()`"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+In this tutorial we will return to the [Public Health Scotland around Stroke Activity](https://www.opendata.nhs.scot/dataset/scottish-stroke-statistics/resource/47656572-e196-40c8-83e8-08b0b223b2e6) dataset that we used in last week's tutorial. We will also be using the [Health Board Labels](https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc) dataset. 
+
+The aim of this tutorial is to give you some (guided) hands-on experience joining and reshaping tibbles, as well as to reinforce some of the learning we have done across the course. There are 8 tasks. 
+
+
+```{r library, message = FALSE, warning = FALSE}
+Sys.setenv(TZ = "Europe/London") # set timezone (TZ argument) to whatever timezone you may be in. The allows the to packages to work as intended
+
+library(tidyverse)
+library(lubridate) #if using tidyverse 2.0.0 or later lubridate will be loaded with the tidyverse 
+```
+
+```{r load-data}
+## read in the data sets 
+
+stroke_raw <- read_csv("https://www.opendata.nhs.scot/dataset/f5dcf382-e6ca-49f6-b807-4f9cc29555bc/resource/47656572-e196-40c8-83e8-08b0b223b2e6/download/stroke_activitybyhbr.csv")
+
+hb <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv")
+```
+It is always a good idea to quickly double check your data has been read in as expected. Since our data objects are tibbles (due to using `read_csv()`), there is a nice output in our RMD file that we can view by just calling the data object.
+
+```{r view-data-1}
+stroke_raw
+
+```
+
+```{r view-data-2}
+hb
+
+```
+
+Below is an image showing where the different Health Boards are in Scotland on a map.
+[Scotland HB Map](../figures/Map_of_Health_Boards.png)
+
+## Question to solve 
+
+The question we are trying to answer with the data is: 
+
+> What is the average number of discharges with a stroke diagnosis by age group in the East region of Scotland for all admissions in the finanical year 2019/20 and 2020/21?
+
+
+### Task 1
+
+Looking at these two tibbles, what columns do you think are the linkage keys? 
+
+```{r}
+## your answer 
+
+
+```
+
+
+#### Task 1 Solution 
+
+In the `stroke_raw` data set there is `HBR` (health board of residence), which links to the `HB` column in the `hb` data set. 
+
+
+### Task 2 
+
+Join the Stroke activity data set with the [Health Board Labels](https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc) dataset into a new tibble called `stroke_join`. 
+
+In Task 1 above we identified the linkage key variable(s), which is the first step when wanting to complete a join. Next, you need to decide on the type of join you want to use and then implement this in code.
+
+```{r}
+## your answer 
+
+```
+
+
+#### Task 2 Solution 
+
+Either a left join or full join would be appropriate. An inner join is not appropriate here as it removes 2880 observations from the `stroke_raw` data set. In this example solution, I have used a left join, with the `stroke_raw` data set on the left and the `hb` data set on the right (keeping all data from `stroke_raw` and only matching data from `hb`)
+
+```{r task-2}
+stroke_join <- stroke_raw %>% 
+  left_join(hb, by = c("HBR" = "HB"))
+
+stroke_join
+```
+
+
+### Task 3
+
+To answer our question outlined above, we do not need all of the columns currently in the `stroke_join` data set. Process the data to include only the variables needed to answer the question and save this processed data set into an object called `stroke`.
+
+Check the data types of the remaining columns and change them if not appropriate. 
+
+**Hint** Beware of aggregate or summary level data, even in variables not needed to directly answer the question. Consulting the data dictionary (if provided) or doing data checks is crucial at this stage. 
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 3 solution 
+
+The variables we need to answer the question are `FinancialYear`, `AdmissionType`, `AgeGroup`, `Diagnosis`, `NumberOfDischarges`, and `HBName`. We also need `Sex` as we need to filter the data to include only the aggregate level `All` to avoid duplicate data, although `Sex` is not directly related to our question of interest. 
+
+```{r task-3}
+stroke <- stroke_join %>% 
+  select(FinancialYear, AdmissionType, AgeGroup, Sex,
+         Diagnosis, NumberOfDischarges, HBName)
+
+stroke
+```
+
+```{r task-3-1}
+glimpse(stroke)
+```
+
+It looks like all of the variables which are characters should in fact be factors. 
+
+```{r task-3-2}
+stroke <- stroke %>% 
+  mutate(FinancialYear = as.factor(FinancialYear),
+         AdmissionType = as.factor(AdmissionType),
+         AgeGroup = as.factor(AgeGroup),
+         Sex = as.factor(Sex),
+         Diagnosis = as.factor(Diagnosis),
+         HBName = as.factor(HBName))
+
+## a more advanced and elegant solution is to using the across and where functions to coerce all characters to be factors since all of the variables we wanted to change were characters 
+stroke %>% 
+  mutate(across(where(is.character), as.factor))
+
+```
+
+```{r task-3-3}
+glimpse(stroke) # all ready to go!
+```
+
+
+### Task 4
+
+What is the shape of the `stroke` data currently? Is it in a suitable shape?
+
+```{r}
+## your answer 
+
+
+```
+
+#### Task 4 Solution 
+
+The `stroke` data frame is currently in long format as we have a single column for each variable, which is indeed what we want. Long format makes it easier to manipulate and wrangle data. So we will keep it that way. 
+
+
+### Task 5 
+
+Now that we have our joined data set, it is important to inspect the data for any missing or aggregate values. We know from last week that this data set has many aggregate level responses! Check for the unique values of all 7 variables in `stroke`. Are there any unexpected findings? 
+
+```{r}
+## your answer 
+
+```
+
+#### Task 5 Solution 
+
+We know from last week that `AgeGroup` and `AdmissionType` each include aggregate level responses. For completeness sake I have included the code exploring these variables again here as well. 
+
+```{r task-5}
+## since we have converted the characters to be factors, we can use summary to get a summary of each variable in the dataset rather looking at each variable 1 by 1 
+
+stroke %>% 
+  summary()
+```
+
+The output print out for `FinancialYear` and `HBName`are cut off as there are many factor levels (more than 6), so we will check these variables individually. Otherwise, `AdmissionType`, `AgeGroup`, and `Sex` all have aggregate response levels and `NumberOfDischarges` and `HBName` have NAs. 
+
+```{r task-5-2}
+
+stroke %>% 
+  pull(FinancialYear) %>% 
+  summary() # or you could use levels() 
+# no missing or aggregate level data here 
+
+stroke %>%
+  pull(HBName) %>% 
+  summary()
+
+```
+
+Within `HBName` there are 14 health boards as expected but what could the NAs be? Well, we know from last week that HBR in the stroke data set included all of Scotland with the country code S92000003. Because we still have the unedited `stroke_raw` data, we can check if these missing values match up to the aggregate country level. Having a raw data frame version is super useful! 
+
+```{r task-5-3}
+stroke_raw %>% 
+  filter(HBR == "S92000003")
+
+# ah ha! Indeed there are 2880 observations at the country code level in the raw data set. Mystery solved!!
+```
+
+
+### Task 6
+
+We now know there are both aggregate level responses in our tibble as well as missing data. Before we deal with any missing data unnecessarily, let's filter out the responses we are not interested in (i.e., remove the rows we do not need to answer the question) and then check again for any missing data. It is likely that in doing so, the missing data may not be a problem anymore. 
+
+Save your filtered data into a tibble called `stroke_q`
+
+**Hint** First write down what responses you want to keep for each variable in order to answer the question. Then write the code to do so. 
+
+```{r}
+## your answer 
+
+```
+
+#### Task 6 Solution
+
+To answer the question we need: 
+
+* Diagnosis only of stroke 
+* All non-aggregate level responses of AgeGroup
+* Aggregate response All from Sex
+* Health Boards in the East Region of Scotland
+* the aggregate level All response for Admissions 
+* the Financial Years 2019/20 & 2020/21
+
+```{r task-6}
+stroke_q <- stroke %>% 
+  filter(AdmissionType == "All", 
+         Diagnosis == "Stroke",
+         Sex == "All",
+         FinancialYear %in% c("2019/20", "2020/21"),
+         !AgeGroup %in% c("All", "under75 years"),
+         HBName %in% c("NHS Lothian", "NHS Fife", "NHS Borders")
+         )
+
+stroke_q # now 24 rows of 7 columns 
+## if we did not filter for "All" in Sex, we would have 72 rows (duplicate data as there are 3 levels in Sex)
+
+```
+
+
+```{r task-6-2}
+## lets check for missing values in HBName and NumberOfDischarges in our now filtered df 
+
+stroke_q %>% 
+  pull(HBName) %>% 
+  is.na() %>% 
+  sum()
+
+stroke_q %>% 
+  pull(NumberOfDischarges) %>% 
+  is.na() %>% 
+  sum()
+
+# happy days, no more missing data to worry about in order to answer the question 
+```
+
+
+### Task 7 
+
+Now that we have our data prepared and check, answer the question posed at the the start of this notebook:
+    
+> What is the average number of discharges with a stroke diagnosis by age group in the East region of Scotland for all admissions in the finanical year 2019/20 and 2020/21?
+
+
+```{r}
+## your answer 
+
+```
+
+#### Task 7 Solution 
+
+```{r task-7}
+stroke_q %>% 
+  group_by(AgeGroup, FinancialYear, HBName) %>% 
+  summarise(mean_discharge  = mean(NumberOfDischarges))
+```
+
+**Message explanation** The reason for the message "`summarise()` has grouped output by 'X'. You can override using the `.groups` argument." is that the `dplyr` package drops the last group variable that was specified in the `group_by` function, in case we are using multiple columns to group our data before applying the summarise function.
+
+This message helps to make the user aware that a grouping was performed. However, the message does not have an impact on the final result. In other words: the message "`summarise()` has grouped output by 'X'. You can override using the `.groups` argument." is just a friendly warning message that could usually be ignored.
+
+
+### Task 8 
+
+As I mentioned in this week's content, wide data is often more human readable than long data. Take your solution to Task 7 and make the presentation a nicer by reshaping the data a bit! 
+
+**Hint** using the pipe `%>%` you can pass your solution above to the pivot function of your choice 
+
+```{r}
+## your answer 
+
+```
+
+
+#### Task 8 Solution 
+
+```{r task-8}
+stroke_q %>% 
+  group_by(AgeGroup, FinancialYear, HBName) %>% 
+  summarise(mean_discharge  = mean(NumberOfDischarges)) %>%
+  pivot_wider(values_from = mean_discharge,
+              names_from = FinancialYear)
+```
+
+You can also pass a vector to `names_from` to pivot by multiple columns! 
+
+```{r task-8-2}
+stroke_q %>% 
+  group_by(AgeGroup, FinancialYear, HBName) %>% 
+  summarise(mean_discharge  = mean(NumberOfDischarges)) %>%
+  pivot_wider(values_from = mean_discharge,
+              names_from = c(FinancialYear, HBName))
+```
+
+To see all of the columns in the tibble print out we just need to pipe to the `view()` function which will open the results in a spreadsheet format. 
+
+```{r task-8-3}
+stroke_q %>% 
+  group_by(AgeGroup, FinancialYear, HBName) %>% 
+  summarise(mean_discharge  = mean(NumberOfDischarges)) %>%
+  pivot_wider(values_from = mean_discharge,
+              names_from = c(FinancialYear, HBName)) %>% 
+  view()
+```
+ 
+
+---
+
+Well done! You have completed all of the tasks for the RMarkdown notebook for this tutorial. If you have not done so yet, now move to the Python notebook.
+
+Do not forget your 3 stars, a wish, and a step mini-diaries for this week once you have completed the tutorial notebooks and content for the week. 
+
+---
+*Dr Brittany Blankinship (2024)* 
+
